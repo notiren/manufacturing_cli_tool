@@ -1,0 +1,188 @@
+import subprocess
+import sys
+
+def ensure_package(pkg, imp=None):
+    try:
+        __import__(imp or pkg)
+    except ImportError:
+        print(f"Installing missing package: {pkg}")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", pkg])
+
+# ensure required packages
+ensure_package("pandas")
+ensure_package("requests")
+ensure_package("tqdm")
+ensure_package("openpyxl")
+
+#
+# start script
+#
+
+import os
+import signal
+import pandas as pd
+import requests
+import threading
+from concurrent.futures import ThreadPoolExecutor
+from tqdm import tqdm
+
+# config
+id_col = 'Id'
+factory_col = 'FactoryId'
+max_workers = 32
+output_dir = 'downloaded_images'
+
+# helpers
+def clean_url(val):
+    if not isinstance(val, str):
+        return None
+    val = val.strip()
+    if val.lower().startswith("http://") or val.lower().startswith("https://"):
+        return val
+    return None
+
+def normalize_url(url):
+    return url.strip().lower()
+
+# get input Excel file
+excel_path = input("Drop the path to an Excel (.xlsx) file: ").strip().strip('"').strip("'")
+
+if not excel_path:
+    print("No file path provided. Exiting.\n")
+    sys.exit(1)
+
+if not os.path.isfile(excel_path):
+    print(f"File not found: {excel_path}\n")
+    sys.exit(1)
+
+if not excel_path.lower().endswith(".xlsx"):
+    print(f"Invalid file type. Please provide a .xlsx file.\n")
+    sys.exit(1)
+
+# load Excel
+print(f"Using Excel file: {excel_path}")
+try:
+    df = pd.read_excel(excel_path)
+except Exception as e:
+    print(f"Failed to read Excel file: {e}\n")
+    sys.exit(1)
+
+# detect URL columns
+def detect_url_columns(df, sample_size=10):
+    url_cols = []
+    for col in df.columns:
+        if df[col].dropna().astype(str).head(sample_size).str.startswith("http").any():
+            url_cols.append(col)
+    return url_cols
+
+url_columns = detect_url_columns(df)
+if not url_columns:
+    print("No columns contain URLs.")
+    sys.exit(1)
+
+print(f"URL columns detected: {url_columns}")
+
+# create folders
+for col in url_columns:
+    folder_path = os.path.join(output_dir, col.strip())
+    os.makedirs(folder_path, exist_ok=True)
+
+downloaded_urls = set()
+
+# download function with retry logic
+def download_image(session, factory_id, record_id, folder_name, url, max_retries=3):
+    if not url:
+        return "Skipped invalid URL"
+
+    folder_path = os.path.join(output_dir, folder_name.strip())
+
+    file_ext = os.path.splitext(url)[1]
+    if not file_ext or len(file_ext) > 5:
+        file_ext = '.png'
+
+    file_name = f"{factory_id}-{record_id}"
+    file_path = os.path.join(folder_path, f"{file_name}{file_ext}")
+    file_index = 1
+    while os.path.exists(file_path):
+        file_path = os.path.join(folder_path, f"{file_name}_{file_index}{file_ext}")
+        file_index += 1
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = session.get(url, timeout=10)
+            response.raise_for_status()
+            with open(file_path, 'wb') as f:
+                f.write(response.content)
+            return "Downloaded"
+        except Exception:
+            if attempt == max_retries:
+                return "Failed"
+
+# main
+def main():
+    tasks = []
+    success_count = 0
+    fail_count = 0
+    stop_flag = threading.Event()
+
+    def handle_interrupt(sig, frame):
+        print("\nInterrupt received, stopping downloads...")
+        stop_flag.set()
+
+    signal.signal(signal.SIGINT, handle_interrupt)
+    
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        with requests.Session() as session:
+            for row in df.itertuples(index=False):
+                if stop_flag.is_set():
+                    break
+                factory_id = str(getattr(row, factory_col)).strip()
+                record_id = str(getattr(row, id_col)).strip()
+                if not factory_id or not record_id:
+                    continue
+                for col in url_columns:
+                    if stop_flag.is_set():
+                        break
+                    raw_url = getattr(row, col)
+                    url = clean_url(raw_url)
+                    if not url:
+                        continue
+                    url_key = normalize_url(url)
+                    if url_key in downloaded_urls:
+                        continue
+                    downloaded_urls.add(url_key)
+                    tasks.append(executor.submit(download_image, session, factory_id, record_id, col, url))
+
+        print(f"Starting download of {len(tasks)} files... Press Ctrl+C to cancel.")
+        completed = set()
+        
+        pbar = tqdm(total=len(tasks), desc="Downloading", unit="file")
+        try:
+            while len(completed) < len(tasks) and not stop_flag.is_set():
+                for future in tasks:
+                    if future in completed:
+                        continue
+                    if future.done():
+                        completed.add(future)
+                        try:
+                            result = future.result()
+                            if result == "Downloaded":
+                                success_count += 1
+                            elif result == "Failed":
+                                fail_count += 1
+                        except Exception:
+                            fail_count += 1
+                        pbar.update(1)
+                threading.Event().wait(0.1)
+        except KeyboardInterrupt:
+            stop_flag.set()
+            print("\nInterrupt received, stopping downloads...")
+        finally:
+            pbar.close()
+            if stop_flag.is_set():
+                sys.exit(0)
+                    
+    print(f"All downloads attempted. {success_count} success, {fail_count} failed.\n")
+
+if __name__ == "__main__":
+    main()

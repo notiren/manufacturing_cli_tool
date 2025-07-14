@@ -1,0 +1,2 @@
+C:\Users\NeritonPaçarizi\Documents\Scripts\manufacturing_cli_tool\FileParserv1\bin\Release\net6.0\win-x64\publish\FileParserv1.pdb
+C:\Users\NeritonPaçarizi\Documents\Scripts\manufacturing_cli_tool\FileParserv1\bin\Release\net6.0\win-x64\publish\FileParserv1.exe
