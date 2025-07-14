@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FileParserv1")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d2b069ac5172ce068bd4e44027e130e03e11554c")]
 [assembly: System.Reflection.AssemblyProductAttribute("FileParserv1")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FileParserv1")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
