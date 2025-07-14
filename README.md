@@ -14,7 +14,7 @@ Enjoy !
 
 ### Scripts Menu 
 
-![Cli Menu](/web images/menu.PNG "CLI Menu")
+![Cli Menu](/web%20images/menu.PNG "CLI Menu")
 
 ## Script 1 - Download Images from URL 
 
