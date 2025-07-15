@@ -14,7 +14,7 @@ Enjoy !
 
 ### Scripts Menu 
 
-<img src="web%20images/menu.PNG" alt="Cli Menu" width="300" />
+<img src="web%20images/menu_d.png" alt="Cli Menu" width="300" />
 
 ## Script 1 - Download Images from URL 
 
