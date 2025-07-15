@@ -182,3 +182,6 @@ extracted/
 input files/
 solaborate_logo.ico
 .vs/
+FileParserv1/bin/
+FileParserv1/obj/
+.pdb
