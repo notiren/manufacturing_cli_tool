@@ -120,3 +120,4 @@ if __name__ == "__main__":
     output_dir = os.path.join(os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__), "extracted")
 
     analyze_failed_measurements(input_path, output_dir)
+    input("Press Enter to quit...")

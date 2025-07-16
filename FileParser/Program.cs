@@ -54,6 +54,8 @@ namespace FileParserv1
                 }
 
                 Console.WriteLine("Successfully processed the file inside folder: 'extracted'\n");
+                Console.WriteLine("Press Enter to quit...");
+                Console.ReadLine();
             }
             catch (Exception e)
             {

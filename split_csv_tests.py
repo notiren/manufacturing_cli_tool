@@ -43,3 +43,4 @@ if __name__ == "__main__":
         
     output_folder = "extracted"
     split_csv_preserve_format(csv_file, output_folder, 5004)
+    input("Press Enter to quit...")
