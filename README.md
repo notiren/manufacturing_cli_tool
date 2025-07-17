@@ -25,29 +25,29 @@ python cli_tool.py
 
 ## Available Scripts
 
-### 1️⃣ Download Images from URL
+### 1. Download Images from URL
 
 - Downloads images listed in an Excel file (with URLs)
 - Output folder: `downloaded_images/`
 
-### 2️⃣ Analyze JSON/ZIP
+### 2. Analyze JSON/ZIP
 
 - Parses PoE EELoad or Adapter Edac test data  
 - Accepts `.json`, `.txt`, or zipped multiple files (`.zip`)
 - Output folder: `extracted/`
 
-### 3️⃣ Convert CSV to Excel
+### 3. Convert CSV to Excel
 
 - Converts PoE EELoad `.csv` files into Excel format with custom headers
 - Output folder: `extracted/`
 
-### 4️⃣ Split CSV Tests
+### 4. Split CSV Tests
 
 - Splits `.csv` files containing over 5000 tests  
 - Useful for uploading data to Factory Web
 - Output folder: `extracted/`  
 
-### 5️⃣ File Parser
+### 5. File Parser
 
 - Parses raw PoE Network or Adapter Edac test files from `.zip` archives
 - Output folder: `extracted/`
