@@ -21,6 +21,7 @@ python cli_tool.py
 
 <img src="web%20images/menu_d.png" alt="CLI Menu" width="300"/>
 
+---
 
 ## Available Scripts
 
