@@ -51,6 +51,8 @@ python cli_tool.py
 - Parses raw PoE Network or Adapter Edac test files from `.zip` archives
 - Output folder: `extracted/`
 
+---
+
 ## Requirements
 
 - Windows
