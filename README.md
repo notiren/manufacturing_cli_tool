@@ -1,44 +1,75 @@
-## Manufacturing CLI Tool (internal use)
+# Manufacturing CLI Tool
 
-Run this commmand on terminal:  
+A simple command-line tool to assist with common manufacturing data tasks such as parsing test files, downloading images, and converting file formats.
+
+---
+### Run via Terminal
+```bash
+python cli_tool.py
 ```
-python cli_tool.py  
-```
 
-Or double click on __`cli_tool.py`__  
-Choose script from the menu  
-Drag/drop or paste the file path  
-Enjoy !  
-  
-  
+### Or
 
-### Scripts Menu 
+- Double-click on **`cli_tool.py`**
+- Choose a script from the menu
+- Drag & drop or paste the required file path
+- Done!
 
-<img src="web%20images/menu_d.png" alt="Cli Menu" width="300" />
+---
 
-## Script 1 - Download Images from URL 
+## Scripts Menu
 
-Used for downloading images from an Excel sheet containing URLs  
-Images can be found inside folder __*'downloaded_images'*__
+<img src="web%20images/menu_d.png" alt="CLI Menu" width="300"/>
 
-## Script 2 - Analyze JSON/ZIP 
+---
 
-Used for analyzing test data for PoE EELoad or Adapter Edac from JSON files  
-Accepts single JSON/TXT or multiple files inside a ZIP archive  
-Results can be found inside folder __*'extracted'*__
+## Available Scripts
 
-## Script 3 - Convert CSV to Excel
+### 1️⃣ Download Images from URL
 
-Used for converting PoE EELoad data CSV file to an Excel file with custom headers  
-Results can be found inside folder __*'extracted'*__
+- Downloads images listed in an Excel file (with URLs)
+- Output folder: `downloaded_images/`
 
-## Script 4 - Split CSV Tests  
+---
 
-Used for splitting a CSV file that contains more than 5000 tests  
-This is done in order to upload data to Factory Web succesfully  
-Results can be found inside folder __*'extracted'*__
+### 2️⃣ Analyze JSON/ZIP
 
-## Script 5 - File Parser  
+- Parses PoE EELoad or Adapter Edac test data  
+- Accepts `.json`, `.txt`, or zipped multiple files (`.zip`)
+- Output folder: `extracted/`
 
-Used for parsing testing data from raw PoE Network (.zip) or Adapter Edac (.zip) files  
-Results can be found inside folder __*'extracted'*__  
+---
+
+### 3️⃣ Convert CSV to Excel
+
+- Converts PoE EELoad `.csv` files into Excel format with custom headers
+- Output folder: `extracted/`
+
+---
+
+### 4️⃣ Split CSV Tests
+
+- Splits `.csv` files containing over 5000 tests  
+- Useful for uploading data to Factory Web
+- Output folder: `extracted/`
+
+---
+
+### 5️⃣ File Parser
+
+- Parses raw PoE Network or Adapter Edac test files from `.zip` archives
+- Output folder: `extracted/`
+
+---
+
+## Requirements
+
+- Windows
+- Python 3.7+
+- Packages (auto-installed)
+
+---
+
+## Internal Use Only
+
+This tool is intended for internal factory and engineering team workflows only.
