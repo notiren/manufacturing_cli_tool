@@ -20,7 +20,7 @@ SCRIPTS = {
 }
 
 def display_menu():
-    print("\n=== Manufacturing CLI Tool ===")
+    print("\n=== Manufacturing CLI Tool ===\n")
     for key, (desc, _) in SCRIPTS.items():
         print(f"{key}. {desc}")
     print("q. Quit")
@@ -31,49 +31,68 @@ def get_user_choice():
         choice = input("\nSelect a script to run (1–5): ").strip().lower()
         if choice == 'q':
             print("Exiting.\n")
-            sys.exit(0)
+            return None
         if choice in SCRIPTS:
             return SCRIPTS[choice]
-        print("Invalid choice. Please try again.\n")
+        print("\nInvalid choice. Please try again.")
+
+def prompt_post_script():
+    while True:
+        user_input = input("Press r to return to menu, or q to quit: ").strip().lower()
+        if user_input == 'r':
+            return True  # go back to menu
+        elif user_input == 'q':
+            print("Exiting.\n")
+            return False
+        else:
+            print("Invalid input. Please enter r or q.")
 
 def main():
-    desc, script_rel_path = get_user_choice()
-    script_path = resource_path(script_rel_path)
+    while True:
+        result = get_user_choice()
+        if result is None:
+            break
 
-    if not os.path.exists(script_path):
-        print(f"Script not found: {script_path}")
-        sys.exit(1)
+        desc, script_rel_path = result
+        script_path = resource_path(script_rel_path)
 
-    print(f"\nRunning: {desc}")
+        if not os.path.exists(script_path):
+            print(f"Script not found: {script_path}")
+            continue
 
-    try:
-        if script_path.endswith(".py"):
-            process = subprocess.Popen([sys.executable, script_path])
-        elif script_path.endswith(".exe"):
-            process = subprocess.Popen([script_path])
-        else:
-            print("Unsupported file type.")
-            sys.exit(1)
-            
-        while True:
-            try:
-                process.wait(timeout=0.5)
-                break
-            except subprocess.TimeoutExpired:
+        print(f"\nRunning: {desc}")
+
+        try:
+            if script_path.endswith(".py"):
+                process = subprocess.Popen([sys.executable, script_path])
+            elif script_path.endswith(".exe"):
+                process = subprocess.Popen([script_path])
+            else:
+                print("Unsupported file type.")
                 continue
 
-    except KeyboardInterrupt:
-        print("User interrupted. Terminating the running script...")
-        if process.poll() is None:
-            try:
-                process.terminate()
+            while True:
                 try:
-                    process.wait(timeout=3)
+                    process.wait(timeout=0.5)
+                    break
                 except subprocess.TimeoutExpired:
-                    process.kill()
-            except Exception as e:
-                print(f"Error terminating process: {e}")
-    sys.exit(0)  # Exit after running one script
+                    continue
+
+        except KeyboardInterrupt:
+            print("User interrupted. Terminating the running script...")
+            if process.poll() is None:
+                try:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=3)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                except Exception as e:
+                    print(f"Error terminating process: {e}")
+
+        # after script ends
+        if not prompt_post_script():
+            break
 
 if __name__ == "__main__":
     main()
