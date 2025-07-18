@@ -99,4 +99,3 @@ if __name__ == "__main__":
         
     output_path = "extracted"
     csv_to_excel_with_headers(csv_file_path, output_path)
-    input("Press Enter to quit...")
