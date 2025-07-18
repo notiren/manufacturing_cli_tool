@@ -9,16 +9,22 @@ def process_json_data(file_name, data, results):
     serial_number = data.get("serialNumber", os.path.splitext(file_name)[0])
     sequences = data.get("sequences", [])
     vcp_datas = data.get("vcpDatas", [])
+    network_tasks = data.get("networkTasks", [])
     all_sequences = []
 
     # check for Adapter Edac data
     if sequences:
         for sequence in sequences:
             all_sequences.append(sequence.get("sequenceDatas", []))
-    # else check for PoE data
+    # else check for PoE EELoad data
     elif vcp_datas:
         all_sequences.append(vcp_datas)
+    # else check for PoE Network Data
+    elif network_tasks:
+        for task in network_tasks:
+            all_sequences.append(task.get("taskSections", []))
 
+    # check for false measurements
     for measures in all_sequences:
         for measure in measures:
             if not measure.get("hasPassed", True):
