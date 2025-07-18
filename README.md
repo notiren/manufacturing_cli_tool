@@ -32,7 +32,7 @@ python cli_tool.py
 
 ### 2. Analyze JSON/ZIP
 
-- Parses PoE EELoad or Adapter Edac test data  
+- Analyzes PoE EELoad, PoE Network or Adapter Edac test data  for failed measurements
 - Accepts `.json`, `.txt`, or zipped multiple files (`.zip`)
 - Output folder: `extracted/`
 
