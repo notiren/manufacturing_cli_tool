@@ -78,6 +78,7 @@ def csv_to_excel_with_headers(csv_file, output_dir):
 
     try:
         wb.save(output_xlsx_file)
+        print(f"-----------")
         print(f"Conversion complete. Excel file can be found inside folder: '{output_dir}'\n")
     except PermissionError:
         print(f"\nPermission denied: Could not write to '{output_dir}'. Is the file open?\n")

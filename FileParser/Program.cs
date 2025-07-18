@@ -52,10 +52,8 @@ namespace FileParserv1
                         Console.WriteLine("Invalid choice. Please restart and enter 1 or 2.");
                         return;
                 }
-
+                Console.WriteLine("-----------");
                 Console.WriteLine("Successfully processed the file inside folder: 'extracted'\n");
-                Console.WriteLine("Press Enter to quit...");
-                Console.ReadLine();
             }
             catch (Exception e)
             {

@@ -22,6 +22,7 @@ def split_csv_preserve_format(input_file, output_dir, rows_per_split):
             f_out.writelines(empty_lines)
             f_out.write(header_line)
             f_out.writelines(part)
+    print(f"-----------")
     print(f"CSV was split into {part_num} parts. Files located inside folder: '{output_dir}'\n")
 
 if __name__ == "__main__":
