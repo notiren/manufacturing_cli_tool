@@ -3,14 +3,13 @@
 A simple command-line tool to assist with common manufacturing data tasks such as parsing test files, downloading images, and converting file formats.
 
 ---
-### Run via Terminal
-```bash
-python cli_tool.py
+### Run via PowerShell
+
+```powershell
+RUN.ps1
 ```
+### Then 
 
-### Or
-
-- Double-click on **`cli_tool.py`**
 - Choose a script from the menu
 - Drag & drop or paste the required file path
 - Done!
