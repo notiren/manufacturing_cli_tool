@@ -5,6 +5,8 @@ import os
 from io import TextIOWrapper
 import sys
 
+# Process JSON data
+
 def process_json_data(file_name, data, results):
     serial_number = data.get("serialNumber", os.path.splitext(file_name)[0])
     sequences = data.get("sequences", [])
@@ -60,9 +62,11 @@ def process_json_data(file_name, data, results):
                     "deviation": deviation
                 })
 
+# Check for failed measurements
+
 def analyze_failed_measurements(zip_or_json_path, output_dir):
     results = []
-
+    
     if zipfile.is_zipfile(zip_or_json_path):
         with zipfile.ZipFile(zip_or_json_path, 'r') as zip_ref:
             for file_name in zip_ref.namelist():

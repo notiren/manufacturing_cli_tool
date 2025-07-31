@@ -1,23 +1,5 @@
 import subprocess
 import sys
-
-def ensure_package(pkg, imp=None):
-    try:
-        __import__(imp or pkg)
-    except ImportError:
-        print(f"Installing missing package: {pkg}")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", pkg])
-
-# ensure required packages
-ensure_package("pandas")
-ensure_package("requests")
-ensure_package("tqdm")
-ensure_package("openpyxl")
-
-#
-# start script
-#
-
 import os
 import signal
 import pandas as pd
@@ -26,13 +8,29 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
 
-# config
+# Ensure required packages
+
+def ensure_package(pkg, imp=None):
+    try:
+        __import__(imp or pkg)
+    except ImportError:
+        print(f"Installing missing package: {pkg}")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", pkg])
+
+ensure_package("pandas")
+ensure_package("requests")
+ensure_package("tqdm")
+ensure_package("openpyxl")
+
+# Config
+
 id_col = 'Id'
 factory_col = 'FactoryId'
 max_workers = 32
 output_dir = 'downloaded_images'
 
-# helpers
+# Helpers
+
 def clean_url(val):
     if not isinstance(val, str):
         return None
@@ -44,7 +42,8 @@ def clean_url(val):
 def normalize_url(url):
     return url.strip().lower()
 
-# get input Excel file
+# Get input Excel file
+
 excel_path = input("Drop the path to an Excel (.xlsx) file: ").strip().strip('"').strip("'")
 
 if not excel_path:
@@ -59,7 +58,8 @@ if not excel_path.lower().endswith(".xlsx"):
     print(f"Invalid file type. Please provide a .xlsx file.\n")
     sys.exit(1)
 
-# load Excel
+# Load Excel
+
 print(f"Using Excel file: {excel_path}")
 try:
     df = pd.read_excel(excel_path)
@@ -67,7 +67,8 @@ except Exception as e:
     print(f"Failed to read Excel file: {e}\n")
     sys.exit(1)
 
-# detect URL columns
+# Detect URL columns
+
 def detect_url_columns(df, sample_size=10):
     url_cols = []
     for col in df.columns:
@@ -82,14 +83,16 @@ if not url_columns:
 
 print(f"URL columns detected: {url_columns}")
 
-# create folders
+# Create folders
+
 for col in url_columns:
     folder_path = os.path.join(output_dir, col.strip())
     os.makedirs(folder_path, exist_ok=True)
 
 downloaded_urls = set()
 
-# download function with retry logic
+# Download function with retry logic
+
 def download_image(session, factory_id, record_id, folder_name, url, max_retries=3):
     if not url:
         return "Skipped invalid URL"

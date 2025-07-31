@@ -1,6 +1,12 @@
 import subprocess
 import sys
 import os
+import pandas as pd
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font
+import chardet
+
+# Ensure required packages
 
 def ensure_package(pkg, imp=None):
     try:
@@ -9,16 +15,12 @@ def ensure_package(pkg, imp=None):
         print(f"Installing missing package: {pkg}")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", pkg])
 
-# ensure required packages
 ensure_package("tqdm")
 ensure_package("openpyxl")
 ensure_package("pandas")
 ensure_package("chardet")
 
-import pandas as pd
-from openpyxl import Workbook
-from openpyxl.styles import Alignment, Font
-import chardet
+# CSV to Excel
 
 def detect_encoding(file_path):
     with open(file_path, 'rb') as f:

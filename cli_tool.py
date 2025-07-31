@@ -11,6 +11,7 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 # MENU LIST
+
 SCRIPTS = {
     "1": ("Script 1 - Download Images from URL", "download_img_url.py"),
     "2": ("Script 2 - Analyze JSON/ZIP", "analyze_json_zip.py"),

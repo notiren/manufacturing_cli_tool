@@ -1,6 +1,8 @@
 import os
 import sys
 
+# Split CSV by preserving format
+
 def split_csv_preserve_format(input_file, output_dir, rows_per_split):
     with open(input_file, 'r', encoding='utf-8') as f:
         lines = f.readlines()
@@ -44,6 +46,7 @@ def main():
         print(f"The file is not a CSV: {csv_file}\n")
         sys.exit(1)
         
+    # prompt user for number of items        
     split_number = int(input("Please enter number of items per split: "))
     output_folder = "extracted"
     split_csv_preserve_format(csv_file, output_folder, split_number)
