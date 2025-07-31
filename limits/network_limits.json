@@ -1,0 +1,34 @@
+{
+  "networkTasksLimits": [
+    {
+      "name": "PT2-UC-100F (Performance Test of Layer 2 - Unicast - 100M Full)",
+      "limits": [
+        {
+          "key": "LatencyPerTest",
+          "upperLimit": 1,
+          "lowerLimit": 0
+        },
+        {
+          "key": "TxLineRateVsTestName",
+          "upperLimit": 101,
+          "lowerLimit": 0
+        }
+      ]
+    },
+    {
+      "name": "PT2-UC-1G (Performance Test of Layer 2 - Unicast - 1GFull)",
+      "limits": [
+        {
+          "key": "LatencyPerTest",
+          "upperLimit": 1,
+          "lowerLimit": 0
+        },
+        {
+          "key": "TxLineRateVsTestName",
+          "upperLimit": 1001,
+          "lowerLimit": 0
+        }
+      ]
+    }
+  ]
+}

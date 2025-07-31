@@ -1,0 +1,283 @@
+{
+  "sequences": [
+    {
+      "name": "Sequence-1",
+      "code": "Seq1",
+      "limits": [
+        {
+          "key": "Seq1-Ton Read",
+          "upperLimit": 3001,
+          "lowerLimit": 1001
+        }
+      ]
+    },
+    {
+      "name": "Sequence-2",
+      "code": "Seq2",
+      "limits": [
+        {
+          "key": "Seq2-Vpp-3 RD",
+          "upperLimit": 0.12,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq2-Vpp-2 RD",
+          "upperLimit": 0.12,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq2-Vpp-1 RD",
+          "upperLimit": 0.16,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq2-Vn-3 Read",
+          "upperLimit": 0.045,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq2-Vdc-3 RD",
+          "upperLimit": 12.25,
+          "lowerLimit": 11.9
+        },
+        {
+          "key": "Seq2-Vn-2 Read",
+          "upperLimit": 0.045,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq2-Vdc-2 RD",
+          "upperLimit": 12.25,
+          "lowerLimit": 11.9
+        },
+        {
+          "key": "Seq2-Vdc-1 RD",
+          "upperLimit": 12.25,
+          "lowerLimit": 11.9
+        },
+        {
+          "key": "Seq2-Vn-1 Read",
+          "upperLimit": 0.045,
+          "lowerLimit": 0.001
+        }
+      ]
+    },
+    {
+      "name": "Sequence-3",
+      "code": "Seq3",
+      "limits": [
+        {
+          "key": "Seq3-Vpp-3 RD",
+          "upperLimit": 0.12,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq3-Vpp-2 RD",
+          "upperLimit": 0.12,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq3-Vpp-1 RD",
+          "upperLimit": 0.12,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq3-Vn-3 Read",
+          "upperLimit": 0.045,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq3-Vn-2 Read",
+          "upperLimit": 0.045,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq3-Vn-1 Read",
+          "upperLimit": 0.045,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq3-Vdc-3 RD",
+          "upperLimit": 12.25,
+          "lowerLimit": 11.9
+        },
+        {
+          "key": "Seq3-Vdc-2 RD",
+          "upperLimit": 12.25,
+          "lowerLimit": 11.9
+        },
+        {
+          "key": "Seq3-Vdc-1 RD",
+          "upperLimit": 12.25,
+          "lowerLimit": 11.9
+        },
+        {
+          "key": "Seq3-dV-31 RD",
+          "upperLimit": 0.05,
+          "lowerLimit": -0.2
+        },
+        {
+          "key": "Seq3-dV-21 RD",
+          "upperLimit": 0.05,
+          "lowerLimit": -0.1
+        }
+      ]
+    },
+    {
+      "name": "Sequence-4",
+      "code": "Seq4",
+      "limits": [
+        {
+          "key": "Seq4-Vpp-3 RD",
+          "upperLimit": 0.06,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq4-Vpp-2 RD",
+          "upperLimit": 0.12,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq4-Vpp-1 RD",
+          "upperLimit": 0.12,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq4-Vn-3 Read",
+          "upperLimit": 0.01,
+          "lowerLimit": 0.0001
+        },
+        {
+          "key": "Seq4-Vn-2 Read",
+          "upperLimit": 0.045,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq4-Vn-1 Read",
+          "upperLimit": 0.045,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq4-Vdc-3 RD",
+          "upperLimit": 12.5,
+          "lowerLimit": 12.2
+        },
+        {
+          "key": "Seq4-Vdc-2 RD",
+          "upperLimit": 12.5,
+          "lowerLimit": 12.05
+        },
+        {
+          "key": "Seq4-Vdc-1 RD",
+          "upperLimit": 12.5,
+          "lowerLimit": 11.9
+        },
+        {
+          "key": "Seq4-dV-31 RD",
+          "upperLimit": 0.45,
+          "lowerLimit": 0.15
+        },
+        {
+          "key": "Seq4-dV-21 RD",
+          "upperLimit": 0.25,
+          "lowerLimit": 0.05
+        }
+      ]
+    },
+    {
+      "name": "Sequence-5",
+      "code": "Seq5",
+      "limits": [
+        {
+          "key": "Seq5-Vs-2 Rd",
+          "upperLimit": 12.4,
+          "lowerLimit": 12.1
+        },
+        {
+          "key": "Seq5-Vs-1 Rd",
+          "upperLimit": 12.4,
+          "lowerLimit": 11.9
+        },
+        {
+          "key": "Seq5-Vpp Read",
+          "upperLimit": 0.35,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq5-Vn Read",
+          "upperLimit": 0.15,
+          "lowerLimit": 0.025
+        },
+        {
+          "key": "Seq5-dV Read",
+          "upperLimit": 0.25,
+          "lowerLimit": 0.001
+        }
+      ]
+    },
+    {
+      "name": "Sequence-8",
+      "code": "Seq8",
+      "limits": [
+        {
+          "key": "Seq8-Vpp Read",
+          "upperLimit": 0.12,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq8-Vn Read",
+          "upperLimit": 0.045,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq8-Vdc Read",
+          "upperLimit": 12.48,
+          "lowerLimit": 11.95
+        }
+      ]
+    },
+    {
+      "name": "Sequence-9",
+      "code": "Seq9",
+      "limits": [
+        {
+          "key": "Seq9-Vpp Read",
+          "upperLimit": 0.12,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq9-Vn Read",
+          "upperLimit": 0.045,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "Seq9-Vdc Read",
+          "upperLimit": 12.48,
+          "lowerLimit": 11.95
+        }
+      ]
+    },
+    {
+      "name": "Sequence-10",
+      "code": "Seq10",
+      "limits": [
+        {
+          "key": "Seq10-Ton Read",
+          "upperLimit": 5.1,
+          "lowerLimit": 4
+        }
+      ]
+    },
+    {
+      "name": "Sequence-11",
+      "code": "Seq11",
+      "limits": [
+        {
+          "key": "Seq11-Thd Read",
+          "upperLimit": 26,
+          "lowerLimit": 7
+        }
+      ]
+    }
+  ]
+}

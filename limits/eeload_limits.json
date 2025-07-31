@@ -1,0 +1,69 @@
+{
+  "fixtureLimits": [
+    {
+      "name": "1",
+      "limits": [
+        {
+          "key": "U(V)",
+          "upperLimit": 12.4,
+          "lowerLimit": 11.85
+        },
+        {
+          "key": "Vp+(Voltage peak value)",
+          "upperLimit": 12.6,
+          "lowerLimit": 12.1
+        },
+        {
+          "key": "Vp-(Voltage valley value)",
+          "upperLimit": 12.3,
+          "lowerLimit": 11.7
+        },
+        {
+          "key": "Vpp(Voltage peak valley difference)",
+          "upperLimit": 0.52,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "I(A)",
+          "upperLimit": 5.02,
+          "lowerLimit": 4.97
+        },
+        {
+          "key": "Ip+ (Peak current)",
+          "upperLimit": 5.1,
+          "lowerLimit": 4.95
+        },
+        {
+          "key": "Ip-(Current valley value)",
+          "upperLimit": 5.05,
+          "lowerLimit": 4.94
+        },
+        {
+          "key": "Ipp(Peak valley difference of current)",
+          "upperLimit": 0.125,
+          "lowerLimit": 0.001
+        },
+        {
+          "key": "P(W)",
+          "upperLimit": 64,
+          "lowerLimit": 60
+        },
+        {
+          "key": "Pp+ (Peak power)",
+          "upperLimit": 64,
+          "lowerLimit": 60
+        },
+        {
+          "key": "Pp-(Power valley value)",
+          "upperLimit": 64,
+          "lowerLimit": 60
+        },
+        {
+          "key": "Ppp(Rated maximum power)",
+          "upperLimit": 64,
+          "lowerLimit": 60
+        }
+      ]
+    }
+  ]
+}
