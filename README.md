@@ -42,7 +42,8 @@ RUN.ps1
 
 ### 4. Split CSV Tests
 
-- Splits `.csv` files containing over 5000 tests  
+- Splits `.csv` files containing a multitude of tests
+- Asks for number of tests to include in one split 
 - Useful for uploading data to Factory Web
 - Output folder: `extracted/`  
 
@@ -50,6 +51,20 @@ RUN.ps1
 
 - Parses raw PoE Network or Adapter Edac test files from `.zip` archives
 - Output folder: `extracted/`
+
+### 6. Validate Measurement Limits
+
+- Validates raw test data files using limit profiles defined in `config.json`
+- Can be used to validate:
+  - Adapter EDAC data
+  - PoE EELoad data
+  - PoE Network data
+- Limit configuration JSON files are stored inside folder: `limits/`
+  - `edac_limits.json`
+  - `eeload_limits.json`
+  - `network_limits.json`
+- Supports `.csv`, `.xlsx`, and `.txt` file formats with automatic parser selection
+- Output folder: `extracted/` saved as `validation_results.txt`
 
 ---
 
