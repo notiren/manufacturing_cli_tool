@@ -83,7 +83,9 @@ def csv_to_excel_with_headers(csv_file, output_dir):
     except PermissionError:
         print(f"\nPermission denied: Could not write to '{output_dir}'. Is the file open?\n")
 
-if __name__ == "__main__":
+# ---- Main ----
+
+def main():
     csv_file_path = input("Drop the path to a .csv file: ").strip('"').strip("'")
     
     if not csv_file_path:
@@ -100,3 +102,6 @@ if __name__ == "__main__":
         
     output_path = "extracted"
     csv_to_excel_with_headers(csv_file_path, output_path)
+
+if __name__ == "__main__":
+    main()

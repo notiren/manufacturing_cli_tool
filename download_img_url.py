@@ -118,7 +118,8 @@ def download_image(session, factory_id, record_id, folder_name, url, max_retries
             if attempt == max_retries:
                 return "Failed"
 
-# main
+# ---- Main ----
+
 def main():
     tasks = []
     success_count = 0

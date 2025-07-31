@@ -121,8 +121,12 @@ def analyze_failed_measurements(zip_or_json_path, output_dir):
     except PermissionError:
         print(f"\nPermission denied: Could not write to '{output_csv_file}'. Is the file open in another program?\n")
 
-if __name__ == "__main__":
+# ---- Main ----
+
+def main():
     input_path = input("Drop the path to a .zip, .json, or .txt file: ").strip('"').strip("'")
     output_dir = os.path.join(os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__), "extracted")
-
     analyze_failed_measurements(input_path, output_dir)
+    
+if __name__ == "__main__":
+    main()

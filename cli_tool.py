@@ -10,13 +10,14 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-# menu list
+# MENU LIST
 SCRIPTS = {
     "1": ("Script 1 - Download Images from URL", "download_img_url.py"),
     "2": ("Script 2 - Analyze JSON/ZIP", "analyze_json_zip.py"),
     "3": ("Script 3 - Convert CSV to Excel", "convert_csv_excel_headers.py"),
     "4": ("Script 4 - Split CSV Tests", "split_csv_tests.py"),
     "5": ("Script 5 - File Parser", "FileParser.exe"),
+    "6": ("Script 6 - Validate Limits", "validate_limits.py")
 }
 
 def display_menu():
@@ -28,7 +29,7 @@ def display_menu():
 def get_user_choice():
     while True:
         display_menu()
-        choice = input("\nSelect a script to run (1–5): ").strip().lower()
+        choice = input("\nSelect a script to run (1–6): ").strip().lower()
         if choice == 'q':
             print("Exiting.\n")
             return None
@@ -46,6 +47,8 @@ def prompt_post_script():
             return False
         else:
             print("Invalid input. Please enter r or q.")
+
+# ---- Main ----
 
 def main():
     while True:

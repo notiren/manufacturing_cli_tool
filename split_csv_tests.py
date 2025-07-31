@@ -25,7 +25,9 @@ def split_csv_preserve_format(input_file, output_dir, rows_per_split):
     print(f"-----------")
     print(f"CSV was split into {part_num} parts. Files located inside folder: '{output_dir}'\n")
 
-if __name__ == "__main__":
+# ---- Main ----
+
+def main():
     csv_file = input("Drop the path to a .csv file: ").strip().strip('"').strip("'")
     if not csv_file:
         print("No file path provided. Exiting.\n")
@@ -42,5 +44,9 @@ if __name__ == "__main__":
         print(f"The file is not a CSV: {csv_file}\n")
         sys.exit(1)
         
+    split_number = int(input("Please enter number of items per split: "))
     output_folder = "extracted"
-    split_csv_preserve_format(csv_file, output_folder, 5004)
+    split_csv_preserve_format(csv_file, output_folder, split_number)
+
+if __name__ == "__main__":
+    main()
