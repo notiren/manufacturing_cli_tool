@@ -18,7 +18,7 @@ RUN.ps1
 
 ## Scripts Menu
 
-<img src="web%20images/menu_d.png" alt="CLI Menu" width="300"/>
+<img src="web_images/menu.png" alt="CLI Menu" width="300"/>
 
 ---
 
