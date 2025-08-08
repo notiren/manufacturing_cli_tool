@@ -1,12 +1,5 @@
 import subprocess
 import sys
-import os
-import signal
-import pandas as pd
-import requests
-import threading
-from concurrent.futures import ThreadPoolExecutor
-from tqdm import tqdm
 
 # Ensure required packages
 
@@ -21,6 +14,14 @@ ensure_package("pandas")
 ensure_package("requests")
 ensure_package("tqdm")
 ensure_package("openpyxl")
+
+import os
+import signal
+import pandas as pd
+import requests
+import threading
+from concurrent.futures import ThreadPoolExecutor
+from tqdm import tqdm
 
 # Config
 

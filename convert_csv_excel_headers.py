@@ -1,10 +1,5 @@
-import subprocess
 import sys
-import os
-import pandas as pd
-from openpyxl import Workbook
-from openpyxl.styles import Alignment, Font
-import chardet
+import subprocess
 
 # Ensure required packages
 
@@ -19,6 +14,12 @@ ensure_package("tqdm")
 ensure_package("openpyxl")
 ensure_package("pandas")
 ensure_package("chardet")
+
+import os
+import pandas as pd
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font
+import chardet
 
 # CSV to Excel
 

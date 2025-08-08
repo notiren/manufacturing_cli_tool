@@ -1,9 +1,4 @@
-import csv
-import json
-import os
 import sys
-import openpyxl
-import re
 import subprocess
 
 # Ensure required packages
@@ -16,6 +11,12 @@ def ensure_package(pkg, imp=None):
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", pkg])
 
 ensure_package("openpyxl")
+
+import csv
+import json
+import os
+import openpyxl
+import re
 
 # Parser functions
 
