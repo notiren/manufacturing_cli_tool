@@ -1,5 +1,5 @@
-import subprocess
 import sys
+import subprocess
 
 # Ensure required packages
 
@@ -7,8 +7,12 @@ def ensure_package(pkg, imp=None):
     try:
         __import__(imp or pkg)
     except ImportError:
-        print(f"Installing missing package: {pkg}")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", pkg])
+        print(f"📦 Installing missing package: {pkg}")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", pkg])
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Failed to install {pkg}: {e}")
+            sys.exit(1)
 
 ensure_package("pandas")
 ensure_package("requests")
