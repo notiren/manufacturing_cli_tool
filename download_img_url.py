@@ -191,7 +191,8 @@ def main():
             if stop_flag.is_set():
                 sys.exit(0)
                     
-    print(f"All downloads attempted. {success_count} success, {fail_count} failed.\n")
+    print(f"All downloads attempted. {success_count} success, {fail_count} failed.")
+    print(f"Images can be found inside folder: '{output_dir}'\n")
 
 if __name__ == "__main__":
     main()
