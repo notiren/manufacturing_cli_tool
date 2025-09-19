@@ -5,9 +5,9 @@ import os
 def resource_path(relative_path):
     """Get absolute path to resource (for dev and for PyInstaller onefile)."""
     try:
-        base_path = sys._MEIPASS  # Temp folder in onefile mode
+        base_path = sys._MEIPASS
     except AttributeError:
-        base_path = os.path.abspath(".")
+        base_path = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base_path, relative_path)
 
 # MENU LIST
@@ -18,7 +18,8 @@ SCRIPTS = {
     "3": ("Script 3 - Convert CSV to Excel", "convert_csv_excel_headers.py"),
     "4": ("Script 4 - Split CSV Tests", "split_csv_tests.py"),
     "5": ("Script 5 - File Parser", "FileParser.exe"),
-    "6": ("Script 6 - Validate Limits", "validate_limits.py")
+    "6": ("Script 6 - Validate Limits", "validate_limits.py"),
+    "7": ("Script 7 - Format Mic Calibration File", "format_mic_calibration_file.py")
 }
 
 def display_menu():
@@ -30,7 +31,7 @@ def display_menu():
 def get_user_choice():
     while True:
         display_menu()
-        choice = input("\nSelect a script to run (1–6): ").strip().lower()
+        choice = input("\nSelect a script to run (1–7): ").strip().lower()
         if choice == 'q':
             print("Exiting.\n")
             return None
