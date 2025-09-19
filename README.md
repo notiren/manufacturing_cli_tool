@@ -66,6 +66,13 @@ RUN.ps1
 - Supports `.csv`, `.xlsx`, and `.txt` file formats with automatic parser selection
 - Output folder: `extracted/` saved as `validation_results.txt`
 
+### 7. Format Mic Calibration File
+
+- Extracts Serial Number (SERNO) and Sensitivity Factor (Sens Factor) from the input `.txt` file
+- Interpolates calibration values to a standard reference frequency list
+- Handles invalid inputs gracefully (wrong file type or corrupted data)
+- Output folder: `extracted/` saved as `SerialNumber_filtered.txt`
+
 ---
 
 ## Requirements
