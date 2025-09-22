@@ -22,6 +22,17 @@ import os
 import openpyxl
 import re
 
+# Output folder logic
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if os.path.basename(script_dir).lower() == "scripts":
+    output_dir = os.path.join(os.path.dirname(script_dir), "extracted")
+else:
+    output_dir = os.path.join(script_dir, "extracted")
+    
+os.makedirs(output_dir, exist_ok=True)
+config_path = os.path.join(script_dir, "config.json")
+
 # Parser functions
 
 def parse_csv(path, skip_rows):
@@ -100,6 +111,11 @@ def load_config(path="config.json"):
         return json.load(f)
 
 def load_limits(json_path, root_key):
+    json_path = os.path.join(script_dir, json_path) if not os.path.isabs(json_path) else json_path
+    if not os.path.exists(json_path):
+        print(f"Limits file not found: {json_path}")
+        sys.exit(1)
+        
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -172,10 +188,10 @@ def validate_file(path, limits_dict, parser_func, skip_rows, output_log, field_m
 # ---- Main ----
 
 def main():
-    config = load_config("config.json")
+    config = load_config(config_path)
     SKIP_ROWS = config.get("SKIP_ROWS", 3)
-    OUTPUT_LOG = config.get("OUTPUT_LOG", "extracted/validation_results.txt")
     VALIDATORS = config.get("VALIDATORS", {})
+    OUTPUT_LOG = os.path.join(output_dir, "validation_results.txt")
 
     print("Please select one of the options:")
     keys = list(VALIDATORS.keys())

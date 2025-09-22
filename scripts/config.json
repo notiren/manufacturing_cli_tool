@@ -1,13 +1,12 @@
 {
   "SKIP_ROWS": 3,
-  "OUTPUT_LOG": "extracted/validation_results.txt",
   "VALIDATORS": {
     "adapter_edac": {
       "label": "Adapter EDAC data",
       "ext": ".csv",
       "parser": "parse_csv",
       "limits": {
-        "json": "limits/edac_limits.json",
+        "json": "../limits/edac_limits.json",
         "root": "sequences"
       },
       "fields": {
@@ -19,7 +18,7 @@
       "ext": ".xlsx",
       "parser": "parse_xlsx",
       "limits": {
-        "json": "limits/eeload_limits.json",
+        "json": "../limits/eeload_limits.json",
         "root": "fixtureLimits"
       },
       "fields": {
@@ -31,7 +30,7 @@
       "ext": ".txt",
       "parser": "parse_txt_json_array",
       "limits": {
-        "json": "limits/network_limits.json",
+        "json": "../limits/network_limits.json",
         "root": "networkTasksLimits"
       },
       "fields": {

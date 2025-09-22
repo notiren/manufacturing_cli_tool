@@ -32,7 +32,13 @@ from tqdm import tqdm
 id_col = 'Id'
 factory_col = 'FactoryId'
 max_workers = 32
-output_dir = 'downloaded_images'
+
+# Dynamic output folder logic
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if os.path.basename(script_dir).lower() == "scripts":
+    output_dir = os.path.join(os.path.dirname(script_dir), "downloaded_images")
+else:
+    output_dir = os.path.join(script_dir, "downloaded_images")
 
 # Helpers
 

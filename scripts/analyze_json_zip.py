@@ -129,7 +129,14 @@ def analyze_failed_measurements(zip_or_json_path, output_dir):
 
 def main():
     input_path = input("Drop the path to a .zip, .json, or .txt file: ").strip('"').strip("'")
-    output_dir = os.path.join(os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__), "extracted")
+    
+    # Dynamic output folder logic 
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    if os.path.basename(script_dir).lower() == "scripts":
+        output_dir = os.path.join(os.path.dirname(script_dir), "extracted")
+    else:
+        output_dir = os.path.join(script_dir, "extracted")
+        
     analyze_failed_measurements(input_path, output_dir)
     
 if __name__ == "__main__":

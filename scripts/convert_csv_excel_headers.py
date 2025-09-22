@@ -107,7 +107,13 @@ def main():
         print(f"The file is not a CSV: {csv_file_path}\n")
         sys.exit(1)
         
-    output_path = "extracted"
+    # Dynamic output folder logic 
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    if os.path.basename(script_dir).lower() == "scripts":
+        output_path = os.path.join(os.path.dirname(script_dir), "extracted")
+    else:
+        output_path = os.path.join(script_dir, "extracted")
+        
     csv_to_excel_with_headers(csv_file_path, output_path)
 
 if __name__ == "__main__":

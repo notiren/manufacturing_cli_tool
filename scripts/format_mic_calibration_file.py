@@ -110,7 +110,13 @@ def format_calibration_file(input_file, output_folder):
 
 if __name__ == "__main__":
     input_file = input('Drop the path to a mic calibration .txt file: ').strip().strip('"').strip("'")
-    output_folder = "extracted"
+    
+    # Dynamic output folder logic 
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    if os.path.basename(script_dir).lower() == "scripts":
+        output_folder = os.path.join(os.path.dirname(script_dir), "extracted")
+    else:
+        output_folder = os.path.join(script_dir, "extracted")
     
     print(f"Using file: {os.path.basename(input_file)}")
 

@@ -48,7 +48,14 @@ def main():
         
     # prompt user for number of items        
     split_number = int(input("Please enter number of items per split: "))
-    output_folder = "extracted"
+    
+    # Dynamic output folder logic 
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    if os.path.basename(script_dir).lower() == "scripts":
+        output_folder = os.path.join(os.path.dirname(script_dir), "extracted")
+    else:
+        output_folder = os.path.join(script_dir, "extracted")
+        
     split_csv_preserve_format(csv_file, output_folder, split_number)
 
 if __name__ == "__main__":
