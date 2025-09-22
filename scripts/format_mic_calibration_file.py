@@ -22,6 +22,20 @@ import os
 
 # START SCRIPT
 
+# Helper for dynamic output folder
+
+def get_output_folder(folder_name="extracted"):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    if os.path.basename(script_dir).lower() == "scripts":
+        base_dir = os.path.dirname(script_dir)
+    else:
+        base_dir = script_dir
+    output_folder = os.path.join(base_dir, folder_name)
+    os.makedirs(output_folder, exist_ok=True)
+    return output_folder
+
+# Format calibration file
+
 def format_calibration_file(input_file, output_folder):
     # --- Step 0: Validate file extension ---
     if not input_file.lower().endswith(".txt"):
@@ -110,13 +124,7 @@ def format_calibration_file(input_file, output_folder):
 
 if __name__ == "__main__":
     input_file = input('Drop the path to a mic calibration .txt file: ').strip().strip('"').strip("'")
-    
-    # Dynamic output folder logic 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    if os.path.basename(script_dir).lower() == "scripts":
-        output_folder = os.path.join(os.path.dirname(script_dir), "extracted")
-    else:
-        output_folder = os.path.join(script_dir, "extracted")
+    output_folder = get_output_folder("extracted")
     
     print(f"Using file: {os.path.basename(input_file)}")
 

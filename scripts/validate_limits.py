@@ -29,7 +29,7 @@ if os.path.basename(script_dir).lower() == "scripts":
     output_dir = os.path.join(os.path.dirname(script_dir), "extracted")
 else:
     output_dir = os.path.join(script_dir, "extracted")
-    
+
 os.makedirs(output_dir, exist_ok=True)
 config_path = os.path.join(script_dir, "config.json")
 

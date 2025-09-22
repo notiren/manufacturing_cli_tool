@@ -33,14 +33,21 @@ id_col = 'Id'
 factory_col = 'FactoryId'
 max_workers = 32
 
-# Dynamic output folder logic
-script_dir = os.path.dirname(os.path.abspath(__file__))
-if os.path.basename(script_dir).lower() == "scripts":
-    output_dir = os.path.join(os.path.dirname(script_dir), "downloaded_images")
-else:
-    output_dir = os.path.join(script_dir, "downloaded_images")
+# Helper for dynamic output folder
 
-# Helpers
+def get_output_folder(folder_name="downloaded_images"):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    if os.path.basename(script_dir).lower() == "scripts":
+        base_dir = os.path.dirname(script_dir)
+    else:
+        base_dir = script_dir
+    output_folder = os.path.join(base_dir, folder_name)
+    os.makedirs(output_folder, exist_ok=True)
+    return output_folder
+
+output_dir = get_output_folder("downloaded_images")
+
+# Other Helpers
 
 def clean_url(val):
     if not isinstance(val, str):

@@ -5,6 +5,18 @@ import os
 from io import TextIOWrapper
 import sys
 
+# Helper for dynamic output folder
+
+def get_output_folder(folder_name="downloaded_images"):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    if os.path.basename(script_dir).lower() == "scripts":
+        base_dir = os.path.dirname(script_dir)
+    else:
+        base_dir = script_dir
+    output_folder = os.path.join(base_dir, folder_name)
+    os.makedirs(output_folder, exist_ok=True)
+    return output_folder
+
 # Process JSON data
 
 def process_json_data(file_name, data, results):
@@ -129,14 +141,7 @@ def analyze_failed_measurements(zip_or_json_path, output_dir):
 
 def main():
     input_path = input("Drop the path to a .zip, .json, or .txt file: ").strip('"').strip("'")
-    
-    # Dynamic output folder logic 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    if os.path.basename(script_dir).lower() == "scripts":
-        output_dir = os.path.join(os.path.dirname(script_dir), "extracted")
-    else:
-        output_dir = os.path.join(script_dir, "extracted")
-        
+    output_dir = get_output_folder("extracted")
     analyze_failed_measurements(input_path, output_dir)
     
 if __name__ == "__main__":

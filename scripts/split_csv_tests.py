@@ -1,6 +1,18 @@
 import os
 import sys
 
+# Helper for dynamic output
+
+def get_output_folder(folder_name="extracted"):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    if os.path.basename(script_dir).lower() == "scripts":
+        base_dir = os.path.dirname(script_dir)
+    else:
+        base_dir = script_dir
+    output_folder = os.path.join(base_dir, folder_name)
+    os.makedirs(output_folder, exist_ok=True)
+    return output_folder
+
 # Split CSV by preserving format
 
 def split_csv_preserve_format(input_file, output_dir, rows_per_split):
@@ -48,14 +60,7 @@ def main():
         
     # prompt user for number of items        
     split_number = int(input("Please enter number of items per split: "))
-    
-    # Dynamic output folder logic 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    if os.path.basename(script_dir).lower() == "scripts":
-        output_folder = os.path.join(os.path.dirname(script_dir), "extracted")
-    else:
-        output_folder = os.path.join(script_dir, "extracted")
-        
+    output_folder = get_output_folder("extracted")
     split_csv_preserve_format(csv_file, output_folder, split_number)
 
 if __name__ == "__main__":

@@ -25,6 +25,18 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font
 import chardet
 
+# Helper for dynamic output folder
+
+def get_output_folder(folder_name="extracted"):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    if os.path.basename(script_dir).lower() == "scripts":
+        base_dir = os.path.dirname(script_dir)
+    else:
+        base_dir = script_dir
+    output_folder = os.path.join(base_dir, folder_name)
+    os.makedirs(output_folder, exist_ok=True)
+    return output_folder
+
 # CSV to Excel
 
 def detect_encoding(file_path):
@@ -107,13 +119,7 @@ def main():
         print(f"The file is not a CSV: {csv_file_path}\n")
         sys.exit(1)
         
-    # Dynamic output folder logic 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    if os.path.basename(script_dir).lower() == "scripts":
-        output_path = os.path.join(os.path.dirname(script_dir), "extracted")
-    else:
-        output_path = os.path.join(script_dir, "extracted")
-        
+    output_path = get_output_folder("extracted")
     csv_to_excel_with_headers(csv_file_path, output_path)
 
 if __name__ == "__main__":
