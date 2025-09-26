@@ -14,7 +14,6 @@ def ensure_package(pkg, imp=None):
             print(f"❌ Failed to install {pkg}: {e}")
             sys.exit(1)
 
-ensure_package("tqdm")
 ensure_package("openpyxl")
 ensure_package("pandas")
 ensure_package("chardet")
