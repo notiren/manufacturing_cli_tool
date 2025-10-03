@@ -5,7 +5,7 @@ A simple command-line tool to assist with common manufacturing data tasks such a
 ---
 ### Run via Python
 
-```python
+```powershell
 python cli_tool.py
 ```
 ### Then 
