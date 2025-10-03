@@ -3,10 +3,10 @@
 A simple command-line tool to assist with common manufacturing data tasks such as parsing test files, downloading images, and converting file formats.
 
 ---
-### Run via PowerShell
+### Run via Python
 
-```powershell
-RUN.ps1
+```python
+python cli_tool.py
 ```
 ### Then 
 
