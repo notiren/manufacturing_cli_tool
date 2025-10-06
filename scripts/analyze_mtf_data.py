@@ -135,7 +135,7 @@ def apply_styles_and_formatting(output_file, sheet_name, max_pairs=17):
                         else:
                             cell.fill = bad_fill
 
-    # ✅ Regulated column widths
+    # Regulated column widths
     for column_cells in ws.columns:
         header = column_cells[0].value
         column = get_column_letter(column_cells[0].column)
@@ -154,7 +154,7 @@ def apply_styles_and_formatting(output_file, sheet_name, max_pairs=17):
     # Freeze top row
     ws.freeze_panes = "A2"
 
-    # ✅ Add fail count and percentage summary
+    # Add fail count and percentage summary
     if sheet_name in ("AVG_MTF_FOCUS", "AVG_MTF_LCE"):
         result_col = col_map.get("Result")
         if result_col:
@@ -211,7 +211,7 @@ def process_excel(input_file, output_folder):
         print(f"❌ Missing required sheet(s): {', '.join(missing)}")
         sys.exit(1)
 
-    print("📑 Found sheets:", ", ".join(sheets))
+    print("Found sheets:", ", ".join(sheets))
 
     # Process focus and LCE
     focus_df = pd.read_excel(input_file, sheet_name="Test_MTF_FOCUS")
@@ -228,7 +228,7 @@ def process_excel(input_file, output_folder):
         # Copy remaining sheets
         for sheet in sheets:
             if sheet not in required_sheets:
-                print(f"📋 Copying sheet: {sheet}")
+                print(f"Copying sheet: {sheet}")
                 df = pd.read_excel(input_file, sheet_name=sheet)
                 df.to_excel(writer, sheet_name=sheet, index=False)
 
@@ -237,7 +237,7 @@ def process_excel(input_file, output_folder):
     for sheet_name in wb.sheetnames:
         apply_styles_and_formatting(output_file, sheet_name)
 
-    print(f"✅ Output written to: {output_file}")
+    print(f"Output written to: {output_file}")
     return output_file
 
 
