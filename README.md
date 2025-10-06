@@ -73,6 +73,14 @@ python cli_tool.py
 - Handles invalid inputs gracefully (wrong file type or corrupted data)
 - Output folder: `extracted/` saved as `SerialNumber_filtered.txt`
 
+### 8. Analyze MTF Data
+
+- Processes Test_MTF_FOCUS and Test_MTF_LCE sheets.
+- Averages B#_H and B#_V values into B#_H_V.
+- Applies styled formatting for clarity (colored cells for PASS/FAIL).
+- Adds a fail summary (count + percentage) next to processed data.
+- Output folder: `extracted/` saved as an output Excel file with `_processed` suffix.
+
 ---
 
 ## Requirements
