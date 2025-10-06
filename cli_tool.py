@@ -19,7 +19,8 @@ SCRIPTS = {
     "4": ("Script 4 - Split CSV Tests", "scripts/split_csv_tests.py"),
     "5": ("Script 5 - File Parser", "scripts/FileParser.exe"),
     "6": ("Script 6 - Validate Limits", "scripts/validate_limits.py"),
-    "7": ("Script 7 - Format Mic Calibration File", "scripts/format_mic_calibration_file.py")
+    "7": ("Script 7 - Format Mic Calibration File", "scripts/format_mic_calibration_file.py"),
+    "8": ("Script 8 - Analyze MTF Data", "scripts/analyze_mtf_data.py")
 }
 
 def display_menu():
@@ -31,7 +32,7 @@ def display_menu():
 def get_user_choice():
     while True:
         display_menu()
-        choice = input("\nSelect a script to run (1–7): ").strip().lower()
+        choice = input("\nSelect a script to run (1–8): ").strip().lower()
         if choice == 'q':
             print("Exiting.\n")
             return None
