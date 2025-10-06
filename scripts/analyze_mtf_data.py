@@ -22,6 +22,7 @@ import os
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
+from openpyxl.styles import PatternFill, Font, Alignment
 
 # -----------------------------------
 # Utility functions
@@ -106,15 +107,13 @@ def apply_styles_and_formatting(output_file, sheet_name, max_pairs=17):
     Apply coloring, auto column widths (with regulated widths for processed columns),
     freeze top row, and add a summary block (fail count + percentage).
     """
-    from openpyxl.styles import PatternFill, Font, Alignment
-    from openpyxl.utils import get_column_letter
 
     wb = load_workbook(output_file)
     ws = wb[sheet_name]
 
     # Define fill colors
-    good_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")  # green
-    bad_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")   # red
+    good_fill  = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid") # green
+    bad_fill   = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid") # red
     accent2_20 = PatternFill(start_color="FDECEC", end_color="FDECEC", fill_type="solid") # accent 2 20%
     accent2_40 = PatternFill(start_color="F7CAC9", end_color="F7CAC9", fill_type="solid") # accent 2 40%
     accent3_40 = PatternFill(start_color="C6E0B4", end_color="C6E0B4", fill_type="solid") # accent 3 40%
