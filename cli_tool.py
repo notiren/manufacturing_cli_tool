@@ -13,14 +13,14 @@ def resource_path(relative_path):
 # MENU LIST
 
 SCRIPTS = {
-    "1": ("Script 1 - Download Images from URL", "scripts/download_img_url.py"),
-    "2": ("Script 2 - Analyze JSON/ZIP", "scripts/analyze_json_zip.py"),
+    "1": ("Script 1 - Analyze JSON/ZIP", "scripts/analyze_json_zip.py"),
+    "2": ("Script 2 - Analyze MTF Data", "scripts/analyze_mtf_data.py"),
     "3": ("Script 3 - Convert CSV to Excel", "scripts/convert_csv_excel_headers.py"),
-    "4": ("Script 4 - Split CSV Tests", "scripts/split_csv_tests.py"),
+    "4": ("Script 4 - Download Images from URL", "scripts/download_img_url.py"),
     "5": ("Script 5 - File Parser", "scripts/FileParser.exe"),
-    "6": ("Script 6 - Validate Limits", "scripts/validate_limits.py"),
-    "7": ("Script 7 - Format Mic Calibration File", "scripts/format_mic_calibration_file.py"),
-    "8": ("Script 8 - Analyze MTF Data", "scripts/analyze_mtf_data.py")
+    "6": ("Script 6 - Format Mic Calibration File", "scripts/format_mic_calibration_file.py"),
+    "7": ("Script 7 - Split CSV Tests", "scripts/split_csv_tests.py"),
+    "8": ("Script 8 - Validate Limits", "scripts/validate_limits.py")
 }
 
 def display_menu():
