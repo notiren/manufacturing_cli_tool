@@ -24,62 +24,76 @@ python cli_tool.py
 
 ## Available Scripts
 
-### 1. Download Images from URL
+### 1. Analyze JSON/ZIP
 
-- Downloads images listed in an Excel file (with URLs)
-- Output folder: `downloaded_images/`
-
-### 2. Analyze JSON/ZIP
-
-- Analyzes PoE EELoad, PoE Network or Adapter Edac test data  for failed measurements
-- Accepts `.json`, `.txt`, or zipped multiple files (`.zip`)
+- Analyzes PoE EELoad, PoE Network or Adapter Edac test data for failed measurements  
+- Accepts `.json`, `.txt`, or zipped multiple files (`.zip`)  
 - Output folder: `extracted/`
+
+---
+
+### 2. Analyze MTF Data
+
+- Processes Test_MTF_FOCUS and Test_MTF_LCE sheets  
+- Averages B#_H and B#_V values into B#_H_V  
+- Applies styled formatting for clarity (colored cells for PASS/FAIL)  
+- Adds a fail summary (count + percentage) next to processed data  
+- Output folder: `extracted/` saved as an output Excel file with `_processed` suffix  
+
+---
 
 ### 3. Convert CSV to Excel
 
-- Converts PoE EELoad `.csv` files into Excel format with custom headers
+- Converts PoE EELoad `.csv` files into Excel format with custom headers  
 - Output folder: `extracted/`
 
-### 4. Split CSV Tests
+---
 
-- Splits `.csv` files containing a multitude of tests
-- Asks for number of tests to include in one split 
-- Useful for uploading data to Factory Web
-- Output folder: `extracted/`  
+### 4. Download Images from URL
+
+- Downloads images listed in an Excel file (with URLs)  
+- Output folder: `downloaded_images/`
+
+---
 
 ### 5. File Parser
 
-- Parses raw PoE Network or Adapter Edac test files from `.zip` archives
+- Parses raw PoE Network or Adapter Edac test files from `.zip` archives  
 - Output folder: `extracted/`
 
-### 6. Validate Measurement Limits
+---
 
-- Validates raw test data files using limit profiles defined in `config.json`
-- Can be used to validate:
-  - Adapter EDAC data
-  - PoE EELoad data
-  - PoE Network data
-- Limit configuration JSON files are stored inside folder: `limits/`
-  - `edac_limits.json`
-  - `eeload_limits.json`
-  - `network_limits.json`
-- Supports `.csv`, `.xlsx`, and `.txt` file formats with automatic parser selection
-- Output folder: `extracted/` saved as `validation_results.txt`
+### 6. Format Mic Calibration File
 
-### 7. Format Mic Calibration File
-
-- Extracts Serial Number (SERNO) and Sensitivity Factor (Sens Factor) from the input `.txt` file
-- Interpolates calibration values to a standard reference frequency list
-- Handles invalid inputs gracefully (wrong file type or corrupted data)
+- Extracts Serial Number (SERNO) and Sensitivity Factor (Sens Factor) from the input `.txt` file  
+- Interpolates calibration values to a standard reference frequency list  
+- Handles invalid inputs gracefully (wrong file type or corrupted data)  
 - Output folder: `extracted/` saved as `SerialNumber_filtered.txt`
 
-### 8. Analyze MTF Data
+---
 
-- Processes Test_MTF_FOCUS and Test_MTF_LCE sheets.
-- Averages B#_H and B#_V values into B#_H_V.
-- Applies styled formatting for clarity (colored cells for PASS/FAIL).
-- Adds a fail summary (count + percentage) next to processed data.
-- Output folder: `extracted/` saved as an output Excel file with `_processed` suffix.
+### 7. Split CSV Tests
+
+- Splits `.csv` files containing a multitude of tests  
+- Asks for number of tests to include in one split  
+- Useful for uploading data to Factory Web  
+- Output folder: `extracted/`  
+
+---
+
+### 8. Validate Measurement Limits
+
+- Validates raw test data files using limit profiles defined in `config.json`  
+- Can be used to validate:
+  - Adapter EDAC data  
+  - PoE EELoad data  
+  - PoE Network data  
+- Limit configuration JSON files are stored inside folder: `limits/`  
+  - `edac_limits.json`  
+  - `eeload_limits.json`  
+  - `network_limits.json`  
+- Supports `.csv`, `.xlsx`, and `.txt` file formats with automatic parser selection  
+- Output folder: `extracted/` saved as `validation_results.txt`
 
 ---
 
