@@ -111,12 +111,11 @@ def apply_styles_and_formatting(output_file, sheet_name, max_pairs=17):
     wb = load_workbook(output_file)
     ws = wb[sheet_name]
 
-    # Define fill colors
+    # Define fill and font colors
     good_fill  = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid") # green
     bad_fill   = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid") # red
-    accent2_20 = PatternFill(start_color="FDECEC", end_color="FDECEC", fill_type="solid") # accent 2 20%
-    accent2_40 = PatternFill(start_color="F7CAC9", end_color="F7CAC9", fill_type="solid") # accent 2 40%
-    accent3_40 = PatternFill(start_color="C6E0B4", end_color="C6E0B4", fill_type="solid") # accent 3 40%
+    pass_font  = Font(color="4F6228")  # olive green
+    fail_font  = Font(color="FF0000")  # bright red
 
     headers = [cell.value for cell in ws[1]]
     col_map = {header: idx + 1 for idx, header in enumerate(headers)}
@@ -134,6 +133,19 @@ def apply_styles_and_formatting(output_file, sheet_name, max_pairs=17):
                             cell.fill = good_fill
                         else:
                             cell.fill = bad_fill
+    
+    # Color the PASS/FAIL text in the Result column
+    result_col = col_map.get("Result")
+    if result_col:
+        for r in range(2, ws.max_row + 1):
+            result_cell = ws.cell(row=r, column=result_col)
+            if result_cell.value:
+                text = str(result_cell.value).strip().upper()
+                if text == "PASS":
+                    result_cell.font = pass_font
+                elif text == "FAIL":
+                    result_cell.font = fail_font
+
 
     # Regulated column widths
     for column_cells in ws.columns:
@@ -175,14 +187,9 @@ def apply_styles_and_formatting(output_file, sheet_name, max_pairs=17):
             ws[f"{start_col_letter}4"] = "Total Samples"
             ws[f"{start_col_letter}5"] = "Fail %"
 
-            ws[f"{get_column_letter(start_col + 1)}3"] = fails
-            ws[f"{get_column_letter(start_col + 1)}3"].fill = accent2_40
-            
+            ws[f"{get_column_letter(start_col + 1)}3"] = fails            
             ws[f"{get_column_letter(start_col + 1)}4"] = total
-            ws[f"{get_column_letter(start_col + 1)}4"].fill = accent3_40
-            
             ws[f"{get_column_letter(start_col + 1)}5"] = f"{fail_percent:.2f}%"
-            ws[f"{get_column_letter(start_col + 1)}5"].fill = accent2_20
 
             # Styling summary cells
             for row in range(2, 6):
