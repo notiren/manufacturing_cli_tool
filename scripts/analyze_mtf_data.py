@@ -204,7 +204,7 @@ def apply_styles_and_formatting(output_file, sheet_name, max_pairs=17):
     
 
 def process_excel(input_file, output_folder):
-    """Main Excel processor — creates output file, copies sheets, applies formatting."""
+    """Main Excel processor > creates output file, copies sheets, applies formatting."""
     base_name = os.path.splitext(os.path.basename(input_file))[0]
     output_file = os.path.join(output_folder, f"{base_name}_processed.xlsx")
 
@@ -249,7 +249,7 @@ def process_excel(input_file, output_folder):
 
 
 # -----------------------------------
-# CLI entry point
+# Main
 # -----------------------------------
 if __name__ == "__main__":
     if len(sys.argv) > 1:
