@@ -122,9 +122,16 @@ def format_calibration_file(input_file, output_folder):
 
 # main
 
-if __name__ == "__main__":
-    input_file = input('Drop the path to a mic calibration .txt file: ').strip().strip('"').strip("'")
-    output_folder = get_output_folder("extracted")
+def main():
+    try:
+        input_file = input('Drop the path to a mic calibration .txt file: ').strip().strip('"').strip("'")
+        output_folder = get_output_folder("extracted")
+        
+    except KeyboardInterrupt:
+        sys.exit(1)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        sys.exit(1)
     
     print(f"Using file: {os.path.basename(input_file)}")
 
@@ -132,3 +139,6 @@ if __name__ == "__main__":
         format_calibration_file(input_file, output_folder)
     except Exception as e:
         sys.exit(str(e))
+        
+if __name__ == "__main__":
+    main()

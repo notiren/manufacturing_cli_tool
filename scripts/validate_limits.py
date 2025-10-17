@@ -205,7 +205,14 @@ def main():
     selected_key = keys[int(choice) - 1]
     selected = VALIDATORS[selected_key]
 
-    file_path = input(f"Drop the path to the {selected['label']} file: ").strip().strip('"')
+    try:
+        file_path = input(f"Drop the path to the {selected['label']} file: ").strip().strip('"')
+        
+    except KeyboardInterrupt:
+        sys.exit(1)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        sys.exit(1)
 
     limits = load_limits(selected['limits']['json'], selected['limits']['root'])
     parser_name = selected.get('parser')

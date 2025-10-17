@@ -61,19 +61,25 @@ def normalize_url(url):
     return url.strip().lower()
 
 # Get input Excel file
+try:
+    excel_path = input("Drop the path to an Excel (.xlsx) file: ").strip().strip('"').strip("'")
 
-excel_path = input("Drop the path to an Excel (.xlsx) file: ").strip().strip('"').strip("'")
+    if not excel_path:
+        print("No file path provided. Exiting.\n")
+        sys.exit(1)
 
-if not excel_path:
-    print("No file path provided. Exiting.\n")
+    if not os.path.isfile(excel_path):
+        print(f"File not found: {excel_path}\n")
+        sys.exit(1)
+
+    if not excel_path.lower().endswith(".xlsx"):
+        print(f"Invalid file type. Please provide a .xlsx file.\n")
+        sys.exit(1)
+        
+except KeyboardInterrupt:
     sys.exit(1)
-
-if not os.path.isfile(excel_path):
-    print(f"File not found: {excel_path}\n")
-    sys.exit(1)
-
-if not excel_path.lower().endswith(".xlsx"):
-    print(f"Invalid file type. Please provide a .xlsx file.\n")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
     sys.exit(1)
 
 # Load Excel

@@ -104,22 +104,29 @@ def csv_to_excel_with_headers(csv_file, output_dir):
 # ---- Main ----
 
 def main():
-    csv_file_path = input("Drop the path to a .csv file: ").strip('"').strip("'")
-    
-    if not csv_file_path:
-        print("No file path provided. Exiting.\n")
-        sys.exit(1)
-    
-    if not os.path.isfile(csv_file_path):
-        print(f"File does not exist: {csv_file_path}\n")
-        sys.exit(1)
-    
-    if not csv_file_path.lower().endswith('.csv'):
-        print(f"The file is not a CSV: {csv_file_path}\n")
-        sys.exit(1)
+    try:
+        csv_file_path = input("Drop the path to a .csv file: ").strip('"').strip("'")
         
-    output_path = get_output_folder("extracted")
-    csv_to_excel_with_headers(csv_file_path, output_path)
+        if not csv_file_path:
+            print("No file path provided. Exiting.\n")
+            sys.exit(1)
+        
+        if not os.path.isfile(csv_file_path):
+            print(f"File does not exist: {csv_file_path}\n")
+            sys.exit(1)
+        
+        if not csv_file_path.lower().endswith('.csv'):
+            print(f"The file is not a CSV: {csv_file_path}\n")
+            sys.exit(1)
+            
+        output_path = get_output_folder("extracted")
+        csv_to_excel_with_headers(csv_file_path, output_path)
+        
+    except KeyboardInterrupt:
+        sys.exit(1)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

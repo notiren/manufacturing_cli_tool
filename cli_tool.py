@@ -32,7 +32,15 @@ def display_menu():
 def get_user_choice():
     while True:
         display_menu()
-        choice = input("\nSelect a script to run (1–8): ").strip().lower()
+        try:
+            choice = input("\nSelect a script to run (1–8): ").strip().lower()
+        except KeyboardInterrupt:
+            print("\nUser interrupted. Terminating the running script...")
+            sys.exit(1)
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            sys.exit(1)
+            
         if choice == 'q':
             print("Exiting.\n")
             return None
@@ -85,7 +93,7 @@ def main():
                     continue
 
         except KeyboardInterrupt:
-            print("User interrupted. Terminating the running script...")
+            print("\nUser interrupted. Terminating the running script...")
             if process.poll() is None:
                 try:
                     process.terminate()
