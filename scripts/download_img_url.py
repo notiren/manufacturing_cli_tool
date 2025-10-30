@@ -29,8 +29,7 @@ from tqdm import tqdm
 
 # Config
 
-id_col = 'Id'
-factory_col = 'FactoryId'
+possible_id_col = ["FactoryID", "SerialNumber"]
 max_workers = 32
 
 # Helper for dynamic output folder
@@ -91,6 +90,24 @@ except Exception as e:
     print(f"Failed to read Excel file: {e}\n")
     sys.exit(1)
 
+# Detect which ID column to use
+    
+id_col = None
+for col in possible_id_col:
+    if col in df.columns:
+        id_col = col
+        break
+    
+if not id_col:
+    print(f"None of the expected ID columns found: {possible_id_col}")
+    print(f"Available columns: {list(df.columns)}")
+    id_col = input("Please enter the column name to use as ID: ").strip()
+    if id_col not in df.columns:
+        print(f"Column '{id_col}' not found in file.")
+        sys.exit(1)
+
+print(f"Using ID column: '{id_col}'")
+
 # Detect URL columns
 
 def detect_url_columns(df, sample_size=10):
@@ -117,7 +134,7 @@ downloaded_urls = set()
 
 # Download function with retry logic
 
-def download_image(session, factory_id, record_id, folder_name, url, max_retries=3):
+def download_image(session, record_id, folder_name, url, max_retries=3):
     if not url:
         return "Skipped invalid URL"
 
@@ -127,7 +144,7 @@ def download_image(session, factory_id, record_id, folder_name, url, max_retries
     if not file_ext or len(file_ext) > 5:
         file_ext = '.png'
 
-    file_name = f"{factory_id}-{record_id}"
+    file_name = f"{record_id}"
     file_path = os.path.join(folder_path, f"{file_name}{file_ext}")
     file_index = 1
     while os.path.exists(file_path):
@@ -164,9 +181,8 @@ def main():
             for row in df.itertuples(index=False):
                 if stop_flag.is_set():
                     break
-                factory_id = str(getattr(row, factory_col)).strip()
                 record_id = str(getattr(row, id_col)).strip()
-                if not factory_id or not record_id:
+                if not record_id:
                     continue
                 for col in url_columns:
                     if stop_flag.is_set():
@@ -179,7 +195,7 @@ def main():
                     if url_key in downloaded_urls:
                         continue
                     downloaded_urls.add(url_key)
-                    tasks.append(executor.submit(download_image, session, factory_id, record_id, col, url))
+                    tasks.append(executor.submit(download_image, session, record_id, col, url))
 
         print(f"Starting download of {len(tasks)} files... Press Ctrl+C to cancel.")
         completed = set()
