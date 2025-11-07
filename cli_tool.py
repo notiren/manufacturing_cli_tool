@@ -32,8 +32,9 @@ def display_menu():
 def get_user_choice():
     while True:
         display_menu()
+        max_choice = max(int(k) for k in SCRIPTS.keys())
         try:
-            choice = input("\nSelect a script to run (1–8): ").strip().lower()
+            choice = input(f"\nSelect a script to run (1–{max_choice}): ").strip().lower()
         except KeyboardInterrupt:
             print("\nUser interrupted. Terminating the running script...")
             sys.exit(1)
