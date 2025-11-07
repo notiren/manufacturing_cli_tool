@@ -122,11 +122,15 @@ def main():
         output_path = get_output_folder("extracted")
         csv_to_excel_with_headers(csv_file_path, output_path)
         
-    except KeyboardInterrupt:
-        sys.exit(1)
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(1)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        sys.exit(1)

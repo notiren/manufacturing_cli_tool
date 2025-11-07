@@ -204,16 +204,7 @@ def main():
         sys.exit(1)
     selected_key = keys[int(choice) - 1]
     selected = VALIDATORS[selected_key]
-
-    try:
-        file_path = input(f"Drop the path to the {selected['label']} file: ").strip().strip('"')
-        
-    except KeyboardInterrupt:
-        sys.exit(1)
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        sys.exit(1)
-
+    file_path = input(f"Drop the path to the {selected['label']} file: ").strip().strip('"')
     limits = load_limits(selected['limits']['json'], selected['limits']['root'])
     parser_name = selected.get('parser')
     parser_func = PARSERS.get(parser_name)
@@ -225,4 +216,10 @@ def main():
     validate_file(file_path, limits, parser_func, SKIP_ROWS, OUTPUT_LOG, field_map)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(1)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        sys.exit(1)

@@ -42,27 +42,20 @@ def split_csv_preserve_format(input_file, output_dir, rows_per_split):
 # ---- Main ----
 
 def main():
-    try:
-        csv_file = input("Drop the path to a .csv file: ").strip().strip('"').strip("'")
-        if not csv_file:
-            print("No file path provided. Exiting.\n")
-            sys.exit(1)
-            
-        if not os.path.isabs(csv_file):
-            csv_file = os.path.abspath(os.path.join(os.getcwd(), csv_file))
-
-        if not os.path.isfile(csv_file):
-            print(f"File does not exist: {csv_file}\n")
-            sys.exit(1)
-
-        if not csv_file.lower().endswith('.csv'):
-            print(f"The file is not a CSV: {csv_file}\n")
-            sys.exit(1)
-            
-    except KeyboardInterrupt:
+    csv_file = input("Drop the path to a .csv file: ").strip().strip('"').strip("'")
+    if not csv_file:
+        print("No file path provided. Exiting.\n")
         sys.exit(1)
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        
+    if not os.path.isabs(csv_file):
+        csv_file = os.path.abspath(os.path.join(os.getcwd(), csv_file))
+
+    if not os.path.isfile(csv_file):
+        print(f"File does not exist: {csv_file}\n")
+        sys.exit(1)
+
+    if not csv_file.lower().endswith('.csv'):
+        print(f"The file is not a CSV: {csv_file}\n")
         sys.exit(1)
         
     # prompt user for number of items        
@@ -71,4 +64,10 @@ def main():
     split_csv_preserve_format(csv_file, output_folder, split_number)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(1)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        sys.exit(1)

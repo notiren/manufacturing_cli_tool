@@ -74,9 +74,8 @@ try:
     if not excel_path.lower().endswith(".xlsx"):
         print(f"Invalid file type. Please provide a .xlsx file.\n")
         sys.exit(1)
-        
 except KeyboardInterrupt:
-    sys.exit(1)
+        sys.exit(1)
 except Exception as e:
     print(f"An unexpected error occurred: {e}")
     sys.exit(1)
@@ -230,4 +229,10 @@ def main():
     print(f"Images can be found inside folder: '{output_dir}'\n")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(1)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        sys.exit(1)

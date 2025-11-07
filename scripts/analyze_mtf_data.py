@@ -252,24 +252,24 @@ def process_excel(input_file, output_folder):
 # Main
 # -----------------------------------
 def main():
+    if len(sys.argv) > 1:
+        input_file = sys.argv[1]
+    else:
+        input_file = input("Drop the path to a .xlsx file: ").strip().strip('"').strip("'")
+
+    if not os.path.exists(input_file):
+        print(f"File not found: {input_file}")
+        sys.exit(1)
+
+    output_folder = get_output_folder("extracted")
+    process_excel(input_file, output_folder)
+
+    
+if __name__ == "__main__":
     try:
-        if len(sys.argv) > 1:
-            input_file = sys.argv[1]
-        else:
-            input_file = input("Drop the path to a .xlsx file: ").strip().strip('"').strip("'")
-
-        if not os.path.exists(input_file):
-            print(f"File not found: {input_file}")
-            sys.exit(1)
-
-        output_folder = get_output_folder("extracted")
-        process_excel(input_file, output_folder)
-        
+        main()
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         sys.exit(1)
-    
-if __name__ == "__main__":
-    main()

@@ -7,7 +7,8 @@ import sys
 
 # Helper for dynamic output folder
 
-def get_output_folder(folder_name="downloaded_images"):
+def get_output_folder(folder_name="extracted"):
+    """Determine and create output folder near script."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     if os.path.basename(script_dir).lower() == "scripts":
         base_dir = os.path.dirname(script_dir)
@@ -140,16 +141,15 @@ def analyze_failed_measurements(zip_or_json_path, output_dir):
 # ---- Main ----
 
 def main():
+    input_path = input("Drop the path to a .zip, .json, or .txt file: ").strip('"').strip("'")
+    output_dir = get_output_folder("extracted")
+    analyze_failed_measurements(input_path, output_dir)
+    
+if __name__ == "__main__":
     try:
-        input_path = input("Drop the path to a .zip, .json, or .txt file: ").strip('"').strip("'")
-        output_dir = get_output_folder("extracted")
-        analyze_failed_measurements(input_path, output_dir)
-        
+        main()
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         sys.exit(1)
-    
-if __name__ == "__main__":
-    main()
