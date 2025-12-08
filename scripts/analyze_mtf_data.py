@@ -1,275 +1,425 @@
 import sys
 import subprocess
+import os
 
-# -----------------------------------
-# Ensure required packages
-# -----------------------------------
+# ---------------------------------------------------------
+# AUTO-INSTALL REQUIRED PACKAGES
+# ---------------------------------------------------------
 def ensure_package(pkg, imp=None):
     try:
         __import__(imp or pkg)
     except ImportError:
-        print(f"📦 Installing missing package: {pkg}")
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", pkg])
-        except subprocess.CalledProcessError as e:
-            print(f"❌ Failed to install {pkg}: {e}")
-            sys.exit(1)
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", pkg])
 
 ensure_package("openpyxl")
 ensure_package("pandas")
 
-import os
 import pandas as pd
 from openpyxl import load_workbook
+from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
-from openpyxl.styles import PatternFill, Font, Alignment
+from openpyxl.formatting.rule import FormulaRule
 
-# -----------------------------------
-# Utility functions
-# -----------------------------------
+# ---------------------------------------------------------
+# CONFIG
+# ---------------------------------------------------------
+HEADER_ROW = 14
+LIMIT_ROW = 2
+TOLERANCE = 0.3
+VENDOR1 = "UNISON"
+VENDOR2 = "LCE"
 
-def get_output_folder(folder_name="extracted"):
-    """Determine and create output folder near script."""
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    if os.path.basename(script_dir).lower() == "scripts":
-        base_dir = os.path.dirname(script_dir)
-    else:
-        base_dir = script_dir
-    output_folder = os.path.join(base_dir, folder_name)
-    os.makedirs(output_folder, exist_ok=True)
-    return output_folder
+VENDOR1_OUTPUT_COLS = [
+    "NO", "SN", "LENS SN", "RESULT", "CT",
+    "FOV0.300_LT", "FOV0.300_RT", "FOV0.300_LB", "FOV0.300_RB", "FOV0.300_R",
+    "FOV0.650_L", "FOV0.650_R",
+    "FOV0.700_LT", "FOV0.700_RT", "FOV0.700_LB", "FOV0.700_RB",
+    "FOV0.750_LT", "FOV0.750_RT", "FOV0.750_LB", "FOV0.750_RB"
+]
 
+VENDOR2_OUTPUT_COLS = [
+    "NO", "SN", "LENS SN", "RESULT",
+    "B0_H_V",
+    "B1_H_V", "B2_H_V", "B3_H_V", "B4_H_V",
+    "B5_H_V", "B6_H_V", "B7_H_V", "B8_H_V", "B9_H_V", "B10_H_V",
+    "B11_H_V", "B12_H_V", "B13_H_V", "B14_H_V", "B15_H_V", "B16_H_V"
+]
 
-def get_limit(index: int) -> float:
-    """Return threshold limit based on B index."""
-    if index == 0:
-        return 64.0
-    elif 1 <= index <= 4:
-        return 45.1
-    elif 5 <= index <= 10:
-        return 47.5
-    elif 11 <= index <= 16:
-        return 59.7
-    else:
-        return None
+LIMIT_MAP = {
+    "1": {
+        "CT": "$A$2",
+        "FOV0.300": "$B$2",
+        "FOV0.650": "$C$2",
+        "FOV0.700": "$D$2",
+        "FOV0.750": "$E$2",
+        "TOL": "$F$2"
+    },
+    "2": {
+        "B0": "$A$2",
+        "B1": "$B$2", "B2": "$B$2", "B3": "$B$2", "B4": "$B$2",
+        "B5": "$C$2", "B6": "$C$2", "B7": "$C$2", "B8": "$C$2", "B9": "$C$2", "B10": "$C$2",
+        "B11": "$D$2", "B12": "$D$2", "B13": "$D$2", "B14": "$D$2", "B15": "$D$2", "B16": "$D$2",
+        "TOL": "$E$2"
+    }
+}
 
+# ---------------------------------------------------------
+# VENDOR DATA PROCESSING
+# ---------------------------------------------------------
+def process_vendor1(df):
+    df.columns = df.columns.str.replace(r"\s+", " ", regex=True).str.strip()
+    lens_col = "LENS SN"
+    out = pd.DataFrame(columns=VENDOR1_OUTPUT_COLS)
+    for i, row in df.iterrows():
+        new_row = {
+            "NO": i+1,
+            "SN": row.get("SN", ""),
+            "RESULT": "",
+            "LENS SN": str(row.get(lens_col, ""))
+        }
+        for col in VENDOR1_OUTPUT_COLS[4:]:
+            new_row[col] = row.get(col, None)
+        out.loc[len(out)] = new_row
+    return out
 
-# -----------------------------------
-# Core logic
-# -----------------------------------
+def process_vendor2(df):
+    df.columns = df.columns.str.replace(r"\s+", " ", regex=True).str.strip()
+    sn_col, lens_col, sensorid_col = "SN", "LENS SN", "SensorID"
+    out = pd.DataFrame(columns=VENDOR2_OUTPUT_COLS)
+    for i, row in df.iterrows():
+        new_row = {
+            "NO": row.get("NO", i+1),
+            "SN": row.get(sn_col, ""),
+            "RESULT": "",
+            "LENS SN": str(row.get(lens_col, row.get(sensorid_col, "")))
+        }
+        for idx in range(17):
+            h, v = row.get(f"B{idx}_H", None), row.get(f"B{idx}_V", None)
+            try: avg = (float(h) + float(v)) / 2
+            except: avg = None
+            new_row[f"B{idx}_H_V"] = avg
+        out.loc[len(out)] = new_row
+    return out
 
-def process_sheet(df, max_pairs=17):
-    """
-    Process a single sheet dataframe and return averaged results with pass/fail logic.
-    """
-    output_columns = ["NO", "SN.", "Barcode", "Result"]
-    for i in range(max_pairs):
-        output_columns.append(f"B{i}_H_V")
+# ---------------------------------------------------------
+# WIDTH REGULATION HELPER
+# ---------------------------------------------------------
+def set_column_width(ws, col_idx, min_width=8, max_width=17):
+    max_len = 0
+    for r in range(1, ws.max_row + 1):
+        val = ws.cell(r, col_idx).value
+        if val is not None:
+            max_len = max(max_len, len(str(val)))
+    ws.column_dimensions[get_column_letter(col_idx)].width = min(max(max_len + 2, min_width), max_width)
 
-    out_df = pd.DataFrame(columns=output_columns)
+# ---------------------------------------------------------
+# FIX LENS SN FORMAT
+# ---------------------------------------------------------
+def fix_lens_sn_format(ws):
+    lens_col = None
+    for c in range(1, ws.max_column + 1):
+        if str(ws.cell(HEADER_ROW, c).value).strip().upper() == "LENS SN":
+            lens_col = c
+            break
 
-    for idx, row in df.iterrows():
-        new_row = {}
-        new_row["NO"] = idx + 1
-        new_row["SN."] = row.get("SN.", row.get("SN", ""))
-        new_row["Barcode"] = row.get("Barcode", "")
-        new_row["Result"] = ""
-
-        pass_flag = True  # assume pass until proven otherwise
-
-        for i in range(max_pairs):
-            v_col = f"B{i}_V"
-            h_col = f"B{i}_H"
-            avg_val = None
-
-            if v_col in df.columns and h_col in df.columns:
-                try:
-                    avg_val = (float(row[v_col]) + float(row[h_col])) / 2
-                except (TypeError, ValueError):
-                    avg_val = None
-
-            new_row[f"B{i}_H_V"] = avg_val
-
-            # Check threshold for pass/fail
-            limit = get_limit(i)
-            if limit is not None and avg_val is not None:
-                if avg_val < limit:
-                    pass_flag = False
-
-        new_row["Result"] = "PASS" if pass_flag else "FAIL"
-        out_df.loc[len(out_df)] = new_row
-
-    return out_df
-
-
-def apply_styles_and_formatting(output_file, sheet_name, max_pairs=17):
-    """
-    Apply coloring, auto column widths (with regulated widths for processed columns),
-    freeze top row, and add a summary block (fail count + percentage).
-    """
-
-    wb = load_workbook(output_file)
-    ws = wb[sheet_name]
-
-    # Define fill and font colors
-    good_fill  = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid") # green
-    bad_fill   = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid") # red
-    pass_font  = Font(color="4F6228")  # olive green
-    fail_font  = Font(color="FF0000")  # bright red
-
-    headers = [cell.value for cell in ws[1]]
-    col_map = {header: idx + 1 for idx, header in enumerate(headers)}
-
-    # Apply threshold-based coloring
-    for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
-        for i in range(max_pairs):
-            col_name = f"B{i}_H_V"
-            if col_name in col_map:
-                cell = row[col_map[col_name] - 1]
-                if cell.value is not None:
-                    limit = get_limit(i)
-                    if limit is not None:
-                        if cell.value >= limit:
-                            cell.fill = good_fill
-                        else:
-                            cell.fill = bad_fill
+    if not lens_col:
+        print("LENS SN column not found")
+        return
     
-    # Color the PASS/FAIL text in the Result column
-    result_col = col_map.get("Result")
-    if result_col:
-        for r in range(2, ws.max_row + 1):
-            result_cell = ws.cell(row=r, column=result_col)
-            if result_cell.value:
-                text = str(result_cell.value).strip().upper()
-                if text == "PASS":
-                    result_cell.font = pass_font
-                elif text == "FAIL":
-                    result_cell.font = fail_font
-
-
-    # Regulated column widths
-    for column_cells in ws.columns:
-        header = column_cells[0].value
-        column = get_column_letter(column_cells[0].column)
-
-        if header and any(header.startswith(f"B{i}_H_V") for i in range(max_pairs)):
-            ws.column_dimensions[column].width = 9
+    for r in range(HEADER_ROW + 1, ws.max_row + 1):
+        cell = ws.cell(r, lens_col)
+        val = cell.value
+        if val is None:
             continue
 
-        max_length = 0
-        for cell in column_cells:
-            if cell.value:
-                length = len(str(cell.value))
-                max_length = max(max_length, length)
-        ws.column_dimensions[column].width = min(max_length + 2, 35)
+        s = str(val).strip()
+        if s == "":
+            continue
 
-    # Freeze top row
-    ws.freeze_panes = "A2"
+        cell.number_format = "@"  
 
-    # Add fail count and percentage summary
-    if sheet_name in ("AVG_MTF_FOCUS", "AVG_MTF_LCE"):
-        result_col = col_map.get("Result")
-        if result_col:
-            results = [ws.cell(row=i, column=result_col).value for i in range(2, ws.max_row + 1)]
-            total = len(results)
-            fails = sum(1 for r in results if str(r).strip().lower() == "fail")
-            fail_percent = (fails / total * 100) if total else 0
-
-            # Place summary block 3 columns after last processed Bx_H_V column
-            last_data_col = max(c for c in col_map.values())
-            start_col = last_data_col + 3
-            start_col_letter = get_column_letter(start_col)
-
-            ws[f"{start_col_letter}2"] = "Summary"
-            ws[f"{start_col_letter}2"].font = Font(bold=True, size=12)
-
-            ws[f"{start_col_letter}3"] = "Fail Count"
-            ws[f"{start_col_letter}4"] = "Total Samples"
-            ws[f"{start_col_letter}5"] = "Fail %"
-
-            ws[f"{get_column_letter(start_col + 1)}3"] = fails            
-            ws[f"{get_column_letter(start_col + 1)}4"] = total
-            ws[f"{get_column_letter(start_col + 1)}5"] = f"{fail_percent:.2f}%"
-
-            # Styling summary cells
-            for row in range(2, 6):
-                for col_offset in range(2):
-                    cell = ws[f"{get_column_letter(start_col + col_offset)}{row}"]
-                    cell.alignment = Alignment(horizontal="center", vertical="center")
-                    if row == 2:
-                        cell.font = Font(bold=True)
-                    ws.column_dimensions[get_column_letter(start_col + col_offset)].width = 15
-
-    wb.save(output_file)
+# ---------------------------------------------------------
+# INSERT LIMITS TABLE
+# ---------------------------------------------------------
+def insert_limits_table(ws, vendor):
+    ws.insert_rows(1, amount=HEADER_ROW-1)
     
-
-def process_excel(input_file, output_folder):
-    """Main Excel processor > creates output file, copies sheets, applies formatting."""
-    base_name = os.path.splitext(os.path.basename(input_file))[0]
-    output_file = os.path.join(output_folder, f"{base_name}_processed.xlsx")
-
-    # Load all sheet names first
-    xls = pd.ExcelFile(input_file)
-    sheets = xls.sheet_names
-
-    required_sheets = ["Test_MTF_FOCUS", "Test_MTF_LCE"]
-    missing = [s for s in required_sheets if s not in sheets]
-    if missing:
-        print(f"❌ Missing required sheet(s): {', '.join(missing)}")
-        sys.exit(1)
-
-    print("Found sheets:", ", ".join(sheets))
-
-    # Process focus and LCE
-    focus_df = pd.read_excel(input_file, sheet_name="Test_MTF_FOCUS")
-    lce_df = pd.read_excel(input_file, sheet_name="Test_MTF_LCE")
-
-    focus_out = process_sheet(focus_df)
-    lce_out = process_sheet(lce_df)
-
-    # Write output sheets
-    with pd.ExcelWriter(output_file, engine="openpyxl") as writer:
-        focus_out.to_excel(writer, sheet_name="AVG_MTF_FOCUS", index=False)
-        lce_out.to_excel(writer, sheet_name="AVG_MTF_LCE", index=False)
-
-        # Copy remaining sheets
-        for sheet in sheets:
-            if sheet not in required_sheets:
-                print(f"Copying sheet: {sheet}")
-                df = pd.read_excel(input_file, sheet_name=sheet)
-                df.to_excel(writer, sheet_name=sheet, index=False)
-
-    # Apply formatting to all sheets
-    wb = load_workbook(output_file)
-    for sheet_name in wb.sheetnames:
-        apply_styles_and_formatting(output_file, sheet_name)
-
-    print(f"Output written to: {output_file}")
-    return output_file
-
-
-# -----------------------------------
-# Main
-# -----------------------------------
-def main():
-    if len(sys.argv) > 1:
-        input_file = sys.argv[1]
+    gray1 = PatternFill("solid", fgColor="EDEDED")
+    gray2 = PatternFill("solid", fgColor="D9D9D9")
+    gray3 = PatternFill("solid", fgColor="C4C4C4")
+    gray4 = PatternFill("solid", fgColor="AFAFAF")
+    tol_font = Font(color="00B0F0", bold=True)
+    thin = Side(border_style="thin", color="000000")
+    border = Border(top=thin, left=thin, right=thin, bottom=thin)
+    
+    if vendor=="1":
+        headers = ["CT (Center)", "(0.3FoV)", "(0.65FoV)", "(0.7FoV)", "(0.75FoV)", "TOLERANCE"]
+        values  = [64, 59.7, 47.5, 47.5, 45.1, TOLERANCE]
+        fills   = [gray1, gray2, gray3, gray3, gray4, gray1]
+        fill_map = [1, 5, 6, 4]
+        tol_idx = 6
     else:
-        input_file = input("Drop the path to a .xlsx file: ").strip().strip('"').strip("'")
+        headers = ["B0 (CT)", "B1-B4 (0.3FoV)", "B5-B10 (0.65FoV)", "B11-B16 (0.7FoV)", "TOLERANCE"]
+        values  = [64, 45.1, 47.5, 59.7, TOLERANCE]
+        fills   = [gray1, gray4, gray3, gray2, gray1]
+        fill_map = [1, 4, 6, 6]
+        tol_idx = 5
 
-    if not os.path.exists(input_file):
-        print(f"File not found: {input_file}")
-        sys.exit(1)
+    # Apply limits table + fills
+    for col_idx,(h,fill) in enumerate(zip(headers,fills),start=1):
+        c = ws.cell(1,col_idx,h)
+        c.font = tol_font if col_idx==tol_idx else Font(bold=True)
+        c.fill = fill
+        c.border = border
+        set_column_width(ws, col_idx)
 
-    output_folder = get_output_folder("extracted")
-    process_excel(input_file, output_folder)
+    for col_idx,(v,fill) in enumerate(zip(values,fills),start=1):
+        c = ws.cell(2,col_idx,v)
+        c.border = border
+        set_column_width(ws, col_idx, min_width=8, max_width=17)
 
+    # Apply fills to main header row using fill_map
+    col_idx = 5
+    for fill, span in zip(fills, fill_map):
+        for i in range(span):
+            c = ws.cell(HEADER_ROW, col_idx)
+            c.fill = fill
+            c.font = Font(bold=True)
+            c.alignment = Alignment(horizontal="center", vertical="center")
+            c.border = border
+            set_column_width(ws, col_idx)
+            col_idx += 1
+
+    # Center everything
+    alignment = Alignment(horizontal="center", vertical="center")
+    for col in range(1, ws.max_column + 1):
+        for row in range(1, ws.max_row + 1):
+            ws.cell(row, col).alignment = alignment
     
-if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        sys.exit(1)
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        sys.exit(1)
+    ws.freeze_panes = f"A{HEADER_ROW+1}"
+
+
+# ---------------------------------------------------------
+# INSERT RESULT AND SUMMARY
+# ---------------------------------------------------------
+def insert_excel_formulas(ws, vendor):
+    header_row = HEADER_ROW
+    # Find RESULT column
+    result_col = None
+    for c in range(1, ws.max_column + 1):
+        if str(ws.cell(header_row, c).value).upper() == "RESULT":
+            result_col = c
+            break
+    if not result_col:
+        return
+
+    # Identify measurement columns
+    meas_cols = []
+    limits = []
+    for c in range(1, ws.max_column + 1):
+        name = str(ws.cell(header_row, c).value).upper()
+        if name and name not in ("NO", "SN", "LENS SN", "RESULT"):
+            meas_cols.append(c)
+            # Map to limit cell
+            limit_cell = None
+            for key, cell in LIMIT_MAP[vendor].items():
+                if key != "TOL" and name.startswith(key):
+                    limit_cell = cell
+                    break
+            limits.append(limit_cell)
+
+    tol_cell = LIMIT_MAP[vendor]["TOL"]
+    helper_start_col = ws.max_column + 1
+    helper_cols = []
+
+    # Create hidden helper columns
+    for idx, (col, limit_cell) in enumerate(zip(meas_cols, limits)):
+        helper_col = helper_start_col + idx
+        helper_cols.append(helper_col)
+        ws.cell(header_row, helper_col, f"_H{idx}")
+        ws.column_dimensions[get_column_letter(helper_col)].hidden = True
+        for r in range(header_row + 1, ws.max_row + 1):
+            formula = (f'=IF({get_column_letter(col)}{r}="", "", '
+                       f'IF({get_column_letter(col)}{r} < ({limit_cell}-{tol_cell}),1, '
+                       f'IF({get_column_letter(col)}{r} < ({limit_cell}+{tol_cell}),2,3)))')
+            ws.cell(r, helper_col).value = formula
+
+    # RESULT column formulas
+    first_helper_letter = get_column_letter(helper_cols[0])
+    last_helper_letter = get_column_letter(helper_cols[-1])
+    for r in range(header_row + 1, ws.max_row + 1):
+        ws.cell(r, result_col).value = (
+            f'=IF(COUNTIF({first_helper_letter}{r}:{last_helper_letter}{r},1)>0,"FAIL",'
+            f'IF(COUNTIF({first_helper_letter}{r}:{last_helper_letter}{r},2)>0,"ACCEPTABLE","PASS"))'
+        )
+
+    # Summary table
+    start_row = 4
+    start_col = 1
+    ws.cell(start_row, start_col, "Summary").font = Font(bold=True, size=12)
+    ws.cell(start_row+1, start_col, "Pass Count")
+    ws.cell(start_row+2, start_col, "Acceptable")
+    ws.cell(start_row+3, start_col, "Fail Count")
+    ws.cell(start_row+4, start_col, "Total Samples")
+    ws.cell(start_row+5, start_col, "Fail %")
+
+    result_letter = get_column_letter(result_col)
+    ws.cell(start_row+1, start_col+1, f'=COUNTIF({result_letter}{header_row+1}:{result_letter}{ws.max_row},"PASS")')
+    ws.cell(start_row+2, start_col+1, f'=COUNTIF({result_letter}{header_row+1}:{result_letter}{ws.max_row},"ACCEPTABLE")')
+    ws.cell(start_row+3, start_col+1, f'=COUNTIF({result_letter}{header_row+1}:{result_letter}{ws.max_row},"FAIL")')
+    ws.cell(start_row+4, start_col+1, f'=COUNTA({result_letter}{header_row+1}:{result_letter}{ws.max_row})')
+    ws.cell(start_row+5, start_col+1, f'={get_column_letter(start_col+1)}{start_row+3}/{get_column_letter(start_col+1)}{start_row+4}')
+    ws.cell(start_row+5, start_col+1).number_format = "0.00%"
+
+    # Apply border to summary
+    thin = Side(border_style="thin", color="000000")
+    border = Border(top=thin, left=thin, right=thin, bottom=thin)
+    for row_offset in range(0, 6):
+        for col_offset in range(2):
+            cell = ws[f"{get_column_letter(start_col + col_offset)}{start_row + row_offset}"]
+            cell.border = border
+            if row_offset == 0:
+                cell.font = Font(bold=True)
+
+    # Auto-width for summary columns
+    for col_offset in range(2):
+        # WIDTH REGULATION
+        set_column_width(ws, start_col + col_offset)
+
+# ---------------------------------------------------------
+# APPLY CONDITIONAL FORMATTING TO DATA TABLE
+# ---------------------------------------------------------
+def apply_conditional_formatting(ws, vendor):
+    first_data_row = HEADER_ROW + 1
+    last_data_row = ws.max_row
+
+    red_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+    yellow_fill = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
+    green_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid") 
+
+    tol_cell = LIMIT_MAP[vendor]["TOL"]
+
+    # Apply formatting to measurement columns
+    for c in range(1, ws.max_column + 1):
+        name = str(ws.cell(HEADER_ROW, c).value).upper()
+        if name in ("NO", "SN", "LENS SN", "RESULT") or not name:
+            continue
+
+        col_letter = get_column_letter(c)
+        limit_cell = None
+        for key, cell in LIMIT_MAP[vendor].items():
+            if key != "TOL" and name.startswith(key):
+                limit_cell = cell
+                break
+        if not limit_cell:
+            continue
+
+        cell_range = f"{col_letter}{first_data_row}:{col_letter}{last_data_row}"
+
+        # Conditional rules
+        ws.conditional_formatting.add(
+            cell_range,
+            FormulaRule(formula=[f"{col_letter}{first_data_row} < ({limit_cell}-{tol_cell})"], fill=red_fill, stopIfTrue=True)
+        )
+        ws.conditional_formatting.add(
+            cell_range,
+            FormulaRule(formula=[f"AND({col_letter}{first_data_row} >= ({limit_cell}-{tol_cell}), {col_letter}{first_data_row} < ({limit_cell}+{tol_cell}))"],
+                        fill=yellow_fill, stopIfTrue=True)
+        )
+        ws.conditional_formatting.add(
+            cell_range,
+            FormulaRule(formula=[f"{col_letter}{first_data_row} >= ({limit_cell}+{tol_cell})"], fill=green_fill)
+        )
+
+        # Apply border
+        thin = Side(border_style="thin", color="000000")
+        border = Border(top=thin, left=thin, right=thin, bottom=thin)
+        for r in range(HEADER_ROW, last_data_row + 1):
+            cell = ws.cell(r, c)
+            cell.border = border
+       
+# ---------------------------------------------------------
+# APPLY RESULT FONTS
+# ---------------------------------------------------------
+def apply_result_fonts(ws):
+    result_col = None
+    for c in range(1, ws.max_column + 1):
+        if str(ws.cell(HEADER_ROW, c).value).upper() == "RESULT":
+            result_col = c
+            break
+    if not result_col:
+        return
+
+    first_data_row = HEADER_ROW + 1
+    last_data_row = ws.max_row
+    col_letter = get_column_letter(result_col)
+
+    # Fonts
+    pass_font = Font(color="4F6228")
+    fail_font = Font(color="FF0000")
+    acceptable_font = Font(color="E36C09")
+
+    # FAIL
+    fail_rule = FormulaRule(
+        formula=[f'{col_letter}{first_data_row}="FAIL"'],
+        font=fail_font,
+        stopIfTrue=True
+    )
+    ws.conditional_formatting.add(f"{col_letter}{first_data_row}:{col_letter}{last_data_row}", fail_rule)
+
+    # ACCEPTABLE
+    acceptable_rule = FormulaRule(
+        formula=[f'{col_letter}{first_data_row}="ACCEPTABLE"'],
+        font=acceptable_font,
+        stopIfTrue=True
+    )
+    ws.conditional_formatting.add(f"{col_letter}{first_data_row}:{col_letter}{last_data_row}", acceptable_rule)
+
+    # PASS
+    pass_rule = FormulaRule(
+        formula=[f'{col_letter}{first_data_row}="PASS"'],
+        font=pass_font
+    )
+    ws.conditional_formatting.add(f"{col_letter}{first_data_row}:{col_letter}{last_data_row}", pass_rule)
+
+    # WIDTH REGULATION
+    set_column_width(ws, result_col, max_width=16)
+
+# ---------------------------------------------------------
+# PROCESS FILE
+# ---------------------------------------------------------
+def process_file(input_file,vendor):
+    df = pd.read_excel(input_file, sheet_name=0)
+    if vendor=="1": out=process_vendor1(df)
+    else: out=process_vendor2(df)
+    
+    out_file = os.path.splitext(input_file)[0]+"_processed.xlsx"
+    out.to_excel(out_file, index=False, sheet_name="MTF Data")
+    
+    wb = load_workbook(out_file)
+    ws = wb["MTF Data"]
+    
+    insert_limits_table(ws,vendor)
+    fix_lens_sn_format(ws)
+    insert_excel_formulas(ws,vendor)
+    apply_conditional_formatting(ws,vendor)
+    apply_result_fonts(ws)
+    
+    wb.save(out_file)
+    print("Done:", out_file)
+
+# ---------------------------------------------------------
+# MAIN
+# ---------------------------------------------------------
+def main():
+    print("Select vendor type:")
+    print(f"1. {VENDOR1}")
+    print(f"2. {VENDOR2}")
+    vendor = input("Enter 1 or 2: ").strip()
+    if vendor not in ("1","2"): sys.exit("Invalid vendor")
+    input_file = input("Path to .xlsx file: ").strip('"').strip("'")
+    if not os.path.exists(input_file): sys.exit("File not found")
+    process_file(input_file,vendor)
+
+if __name__=="__main__":
+    main()
