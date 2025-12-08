@@ -179,7 +179,7 @@ pyrightconfig.json
 
 downloaded_images/
 extracted/
-input files/
+input_files/
 solaborate_logo.ico
 .vs/
 FileParser/bin/
@@ -187,3 +187,5 @@ FileParser/obj/
 .pdb
 Poppins/
 ptz_pallet_label/
+multi_series_plot.py
+chart_plot.py
