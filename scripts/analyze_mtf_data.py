@@ -198,7 +198,6 @@ def insert_limits_table(ws, vendor):
     
     ws.freeze_panes = f"A{HEADER_ROW+1}"
 
-
 # ---------------------------------------------------------
 # INSERT RESULT AND SUMMARY
 # ---------------------------------------------------------
@@ -422,4 +421,10 @@ def main():
     process_file(input_file,vendor)
 
 if __name__=="__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        exit()
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        exit()
