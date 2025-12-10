@@ -31,7 +31,7 @@ VENDOR2 = "LCE"
 
 VENDOR1_OUTPUT_COLS = [
     "NO", "SN", "LENS SN", "RESULT", "CT",
-    "FOV0.300_LT", "FOV0.300_RT", "FOV0.300_LB", "FOV0.300_RB", "FOV0.300_R",
+    "FOV0.300_LT", "FOV0.300_RT", "FOV0.300_LB", "FOV0.300_RB", "FOV0.300_L", "FOV0.300_R",
     "FOV0.650_L", "FOV0.650_R",
     "FOV0.700_LT", "FOV0.700_RT", "FOV0.700_LB", "FOV0.700_RB",
     "FOV0.750_LT", "FOV0.750_RT", "FOV0.750_LB", "FOV0.750_RB"
@@ -50,9 +50,9 @@ LIMIT_MAP = {
         "CT": "$A$2",
         "FOV0.300": "$B$2",
         "FOV0.650": "$C$2",
-        "FOV0.700": "$D$2",
-        "FOV0.750": "$E$2",
-        "TOL": "$F$2"
+        "FOV0.700": "$C$2",
+        "FOV0.750": "$D$2",
+        "TOL": "$E$2"
     },
     "2": {
         "B0": "$A$2",
@@ -62,6 +62,19 @@ LIMIT_MAP = {
         "TOL": "$E$2"
     }
 }
+
+GRAY1 = PatternFill("solid", fgColor="EDEDED")
+GRAY2 = PatternFill("solid", fgColor="D9D9D9")
+GRAY3 = PatternFill("solid", fgColor="C4C4C4")
+GRAY4 = PatternFill("solid", fgColor="AFAFAF")
+RED_FILL = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+YELLOW_FILL = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
+GREEN_FILL = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+TOL_FONT = Font(color="00B0F0", bold=True)
+BOLD_FONT = Font(bold=True)
+PASS_FONT = Font(color="4F6228")
+FAIL_FONT = Font(color="FF0000")
+ACCEPTABLE_FONT = Font(color="E36C09")
 
 # ---------------------------------------------------------
 # VENDOR DATA PROCESSING
@@ -143,32 +156,28 @@ def fix_lens_sn_format(ws):
 # ---------------------------------------------------------
 def insert_limits_table(ws, vendor):
     ws.insert_rows(1, amount=HEADER_ROW-1)
-    
-    gray1 = PatternFill("solid", fgColor="EDEDED")
-    gray2 = PatternFill("solid", fgColor="D9D9D9")
-    gray3 = PatternFill("solid", fgColor="C4C4C4")
-    gray4 = PatternFill("solid", fgColor="AFAFAF")
-    tol_font = Font(color="00B0F0", bold=True)
-    thin = Side(border_style="thin", color="000000")
-    border = Border(top=thin, left=thin, right=thin, bottom=thin)
-    
+        
     if vendor=="1":
-        headers = ["CT (Center)", "(0.3FoV)", "(0.65FoV)", "(0.7FoV)", "(0.75FoV)", "TOLERANCE"]
-        values  = [64, 59.7, 47.5, 47.5, 45.1, TOLERANCE]
-        fills   = [gray1, gray2, gray3, gray3, gray4, gray1]
-        fill_map = [1, 5, 6, 4]
-        tol_idx = 6
+        headers = ["CT (Center)", "(0.3FoV)", "(0.7FoV)", "(0.75FoV)", "TOLERANCE"]
+        values  = [64, 59.7, 47.5, 45.1, TOLERANCE]
+        fills   = [GRAY1, GRAY2, GRAY3, GRAY4, GRAY1]
+        fill_map = [1, 6, 6, 4]
+        tol_idx = 5
     else:
-        headers = ["B0 (CT)", "B1-B4 (0.3FoV)", "B5-B10 (0.65FoV)", "B11-B16 (0.7FoV)", "TOLERANCE"]
+        headers = ["B0 (CT)", "B1-B4 (0.75FoV)", "B5-B10 (0.7FoV)", "B11-B16 (0.3FoV)", "TOLERANCE"]
         values  = [64, 45.1, 47.5, 59.7, TOLERANCE]
-        fills   = [gray1, gray4, gray3, gray2, gray1]
+        fills   = [GRAY1, GRAY4, GRAY3, GRAY2, GRAY1]
         fill_map = [1, 4, 6, 6]
         tol_idx = 5
+        
+    # Border settings
+    thin = Side(border_style="thin", color="000000")
+    border = Border(top=thin, left=thin, right=thin, bottom=thin)
 
     # Apply limits table + fills
     for col_idx,(h,fill) in enumerate(zip(headers,fills),start=1):
         c = ws.cell(1,col_idx,h)
-        c.font = tol_font if col_idx==tol_idx else Font(bold=True)
+        c.font = TOL_FONT if col_idx==tol_idx else BOLD_FONT
         c.fill = fill
         c.border = border
         set_column_width(ws, col_idx)
@@ -184,7 +193,7 @@ def insert_limits_table(ws, vendor):
         for i in range(span):
             c = ws.cell(HEADER_ROW, col_idx)
             c.fill = fill
-            c.font = Font(bold=True)
+            c.font = BOLD_FONT
             c.alignment = Alignment(horizontal="center", vertical="center")
             c.border = border
             set_column_width(ws, col_idx)
@@ -219,12 +228,10 @@ def insert_excel_formulas(ws, vendor):
         name = str(ws.cell(header_row, c).value).upper()
         if name and name not in ("NO", "SN", "LENS SN", "RESULT"):
             meas_cols.append(c)
+            
             # Map to limit cell
-            limit_cell = None
-            for key, cell in LIMIT_MAP[vendor].items():
-                if key != "TOL" and name.startswith(key):
-                    limit_cell = cell
-                    break
+            base_name = name.split("_")[0]
+            limit_cell = LIMIT_MAP[vendor].get(base_name)
             limits.append(limit_cell)
 
     tol_cell = LIMIT_MAP[vendor]["TOL"]
@@ -291,11 +298,7 @@ def insert_excel_formulas(ws, vendor):
 def apply_conditional_formatting(ws, vendor):
     first_data_row = HEADER_ROW + 1
     last_data_row = ws.max_row
-
-    red_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
-    yellow_fill = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
-    green_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid") 
-
+    
     tol_cell = LIMIT_MAP[vendor]["TOL"]
 
     # Apply formatting to measurement columns
@@ -304,33 +307,30 @@ def apply_conditional_formatting(ws, vendor):
         if name in ("NO", "SN", "LENS SN", "RESULT") or not name:
             continue
 
-        col_letter = get_column_letter(c)
-        limit_cell = None
-        for key, cell in LIMIT_MAP[vendor].items():
-            if key != "TOL" and name.startswith(key):
-                limit_cell = cell
-                break
+        base_name = name.split("_")[0]
+        limit_cell = LIMIT_MAP[vendor].get(base_name)
         if not limit_cell:
             continue
-
+        
+        col_letter = get_column_letter(c)
         cell_range = f"{col_letter}{first_data_row}:{col_letter}{last_data_row}"
 
         # Conditional rules
         ws.conditional_formatting.add(
             cell_range,
-            FormulaRule(formula=[f"{col_letter}{first_data_row} < ({limit_cell}-{tol_cell})"], fill=red_fill, stopIfTrue=True)
+            FormulaRule(formula=[f"{col_letter}{first_data_row} < ({limit_cell}-{tol_cell})"], fill=RED_FILL, stopIfTrue=True)
         )
         ws.conditional_formatting.add(
             cell_range,
             FormulaRule(formula=[f"AND({col_letter}{first_data_row} >= ({limit_cell}-{tol_cell}), {col_letter}{first_data_row} < ({limit_cell}+{tol_cell}))"],
-                        fill=yellow_fill, stopIfTrue=True)
+                        fill=YELLOW_FILL, stopIfTrue=True)
         )
         ws.conditional_formatting.add(
             cell_range,
-            FormulaRule(formula=[f"{col_letter}{first_data_row} >= ({limit_cell}+{tol_cell})"], fill=green_fill)
+            FormulaRule(formula=[f"{col_letter}{first_data_row} >= ({limit_cell}+{tol_cell})"], fill=GREEN_FILL)
         )
 
-        # Apply border
+        # Apply borders to data table
         thin = Side(border_style="thin", color="000000")
         border = Border(top=thin, left=thin, right=thin, bottom=thin)
         for r in range(HEADER_ROW, last_data_row + 1):
@@ -353,15 +353,10 @@ def apply_result_fonts(ws):
     last_data_row = ws.max_row
     col_letter = get_column_letter(result_col)
 
-    # Fonts
-    pass_font = Font(color="4F6228")
-    fail_font = Font(color="FF0000")
-    acceptable_font = Font(color="E36C09")
-
     # FAIL
     fail_rule = FormulaRule(
         formula=[f'{col_letter}{first_data_row}="FAIL"'],
-        font=fail_font,
+        font=FAIL_FONT,
         stopIfTrue=True
     )
     ws.conditional_formatting.add(f"{col_letter}{first_data_row}:{col_letter}{last_data_row}", fail_rule)
@@ -369,7 +364,7 @@ def apply_result_fonts(ws):
     # ACCEPTABLE
     acceptable_rule = FormulaRule(
         formula=[f'{col_letter}{first_data_row}="ACCEPTABLE"'],
-        font=acceptable_font,
+        font=ACCEPTABLE_FONT,
         stopIfTrue=True
     )
     ws.conditional_formatting.add(f"{col_letter}{first_data_row}:{col_letter}{last_data_row}", acceptable_rule)
@@ -377,7 +372,7 @@ def apply_result_fonts(ws):
     # PASS
     pass_rule = FormulaRule(
         formula=[f'{col_letter}{first_data_row}="PASS"'],
-        font=pass_font
+        font=PASS_FONT
     )
     ws.conditional_formatting.add(f"{col_letter}{first_data_row}:{col_letter}{last_data_row}", pass_rule)
 
