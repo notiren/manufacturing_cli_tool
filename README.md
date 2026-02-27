@@ -71,7 +71,15 @@ python cli_tool.py
 
 ---
 
-### 7. Split CSV Tests
+### 7. QR Code Generator
+
+- Generates QR codes from text or URLs  
+- Takes user input and creates a PNG QR code image  
+- Output folder: `extracted/`  
+
+---
+
+### 8. Split CSV Tests
 
 - Splits `.csv` files containing a multitude of tests  
 - Asks for number of tests to include in one split  
@@ -80,7 +88,7 @@ python cli_tool.py
 
 ---
 
-### 8. Validate Measurement Limits
+### 9. Validate Measurement Limits
 
 - Validates raw test data files using limit profiles defined in `config.json`  
 - Can be used to validate:
