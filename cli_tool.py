@@ -3,70 +3,80 @@ import sys
 import os
 
 def resource_path(relative_path):
-    """Get absolute path to resource (for dev and for PyInstaller onefile)."""
-    try:
-        base_path = sys._MEIPASS
-    except AttributeError:
-        base_path = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base_path, relative_path)
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), relative_path)
 
-# MENU LIST
 
+# ---------- Menu list ----------
 SCRIPTS = {
-    "1": ("Script 1 - Analyze JSON/ZIP", "scripts/analyze_json_zip.py"),
-    "2": ("Script 2 - Analyze MTF Data", "scripts/analyze_mtf_data.py"),
-    "3": ("Script 3 - Convert CSV to Excel", "scripts/convert_csv_excel_headers.py"),
-    "4": ("Script 4 - Download Images from URL", "scripts/download_img_url.py"),
-    "5": ("Script 5 - File Parser", "scripts/FileParser.exe"),
-    "6": ("Script 6 - Format Mic Calibration File", "scripts/format_mic_calibration_file.py"),
-    "7": ("Script 7 - Split CSV Tests", "scripts/split_csv_tests.py"),
-    "8": ("Script 8 - Validate Limits", "scripts/validate_limits.py")
+    "analyze_json_zip": ("Analyze JSON/ZIP", "scripts/analyze_json_zip.py"),
+    "analyze_mtf_data": ("Analyze MTF Data", "scripts/analyze_mtf_data.py"),
+    "convert_csv_excel_headers": ("Convert CSV to Excel", "scripts/convert_csv_excel_headers.py"),
+    "download_img_url": ("Download Images from URL", "scripts/download_img_url.py"),
+    "FileParser": ("File Parser", "scripts/FileParser.exe"),
+    "format_mic_calibration_file": ("Format Mic Calibration File", "scripts/format_mic_calibration_file.py"),
+    "qrcode_gen": ("Generate QR Code", "scripts/qrcode_gen.py"),
+    "split_csv_tests": ("Split CSV Tests", "scripts/split_csv_tests.py"),
+    "validate_limits": ("Validate Limits", "scripts/validate_limits.py"),
 }
 
+
+# ---------- Display Menu ----------
 def display_menu():
     print("\n=== Manufacturing CLI Tool ===\n")
-    for key, (desc, _) in SCRIPTS.items():
-        print(f"{key}. {desc}")
+    keys = list(SCRIPTS.keys())
+    for i, key in enumerate(keys, 1):
+        desc, _ = SCRIPTS[key]
+        print(f"{i}. {desc}")
     print("q. Quit")
 
+
+# ---------- Get User Choice ----------
 def get_user_choice():
+    keys = list(SCRIPTS.keys())
     while True:
         display_menu()
-        max_choice = max(int(k) for k in SCRIPTS.keys())
         try:
-            choice = input(f"\nSelect a script to run (1–{max_choice}): ").strip().lower()
-        except KeyboardInterrupt:
-            print("\nUser interrupted. Terminating the running script...")
-            sys.exit(1)
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
-            sys.exit(1)
-            
-        if choice == 'q':
+            choice = input(f"\nSelect a script to run (1–{len(keys)}): ").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print("\nExiting.\n")
+            return None
+
+        if choice == "q":
             print("Exiting.\n")
             return None
-        if choice in SCRIPTS:
-            return SCRIPTS[choice]
-        print("\nInvalid choice. Please try again.")
 
+        if choice.isdigit():
+            index = int(choice) - 1
+            if 0 <= index < len(keys):
+                return SCRIPTS[keys[index]]
+
+        print("Invalid choice. Please try again.")
+
+
+# ---------- Prompt after script runs ----------
 def prompt_post_script():
     while True:
-        user_input = input("Press r to return to menu, or q to quit: ").strip().lower()
-        if user_input == 'r':
-            return True  # go back to menu
-        elif user_input == 'q':
+        try:
+            user_input = input("\nPress r to return to menu, or q to quit: ").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print("\nExiting.\n")
+            return False
+
+        if user_input == "r":
+            return True
+        elif user_input == "q":
             print("Exiting.\n")
             return False
         else:
             print("Invalid input. Please enter r or q.")
 
-# ---- Main ----
 
+# ---------- Main Loop ----------
 def main():
     while True:
         result = get_user_choice()
         if result is None:
-            break
+            return
 
         desc, script_rel_path = result
         script_path = resource_path(script_rel_path)
@@ -75,7 +85,7 @@ def main():
             print(f"Script not found: {script_path}")
             continue
 
-        print(f"\nRunning: {desc}")
+        print(f"\n▶ Running: {desc}\n")
 
         try:
             if script_path.endswith(".py"):
@@ -86,28 +96,24 @@ def main():
                 print("Unsupported file type.")
                 continue
 
-            while True:
-                try:
-                    process.wait(timeout=0.5)
-                    break
-                except subprocess.TimeoutExpired:
-                    continue
+            try:
+                process.wait()
+            except KeyboardInterrupt:
+                process.wait()
 
         except KeyboardInterrupt:
-            print("\nUser interrupted. Terminating the running script...")
-            if process.poll() is None:
-                try:
-                    process.terminate()
-                    try:
-                        process.wait(timeout=3)
-                    except subprocess.TimeoutExpired:
-                        process.kill()
-                except Exception as e:
-                    print(f"Error terminating process: {e}")
+            print("\nExiting.\n")
+            return
 
-        # after script ends
         if not prompt_post_script():
-            break
+            return
 
+
+# ---------- Entry Point ----------
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        sys.exit(0)
