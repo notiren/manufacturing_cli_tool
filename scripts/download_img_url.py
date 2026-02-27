@@ -26,10 +26,11 @@ import requests
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
+from collections import defaultdict
 
 # Config
 
-possible_id_col = ["FactoryID", "SerialNumber"]
+possible_id_col = ["FactoryId", "SerialNumber"]
 max_workers = 32
 
 # Helper for dynamic output folder
@@ -58,6 +59,11 @@ def clean_url(val):
 
 def normalize_url(url):
     return url.strip().lower()
+
+# Thread-safe filename tracking (ADDED)
+
+used_filenames = defaultdict(set)
+filename_lock = threading.Lock()
 
 # Get input Excel file
 try:
@@ -129,8 +135,6 @@ for col in url_columns:
     folder_path = os.path.join(output_dir, col.strip())
     os.makedirs(folder_path, exist_ok=True)
 
-downloaded_urls = set()
-
 # Download function with retry logic
 
 def download_image(session, record_id, folder_name, url, max_retries=3):
@@ -143,12 +147,24 @@ def download_image(session, record_id, folder_name, url, max_retries=3):
     if not file_ext or len(file_ext) > 5:
         file_ext = '.png'
 
-    file_name = f"{record_id}"
-    file_path = os.path.join(folder_path, f"{file_name}{file_ext}")
-    file_index = 1
-    while os.path.exists(file_path):
-        file_path = os.path.join(folder_path, f"{file_name}_{file_index}{file_ext}")
-        file_index += 1
+    # Filename-based duplicate handling
+
+    base_name = str(record_id)
+
+    with filename_lock:
+        if f"{base_name}{file_ext}" not in used_filenames[folder_name]:
+            final_name = f"{base_name}{file_ext}"
+            used_filenames[folder_name].add(final_name)
+        else:
+            index = 2
+            while True:
+                final_name = f"{base_name}_{index}{file_ext}"
+                if final_name not in used_filenames[folder_name]:
+                    used_filenames[folder_name].add(final_name)
+                    break
+                index += 1
+
+    file_path = os.path.join(folder_path, final_name)
 
     for attempt in range(1, max_retries + 1):
         try:
@@ -190,10 +206,6 @@ def main():
                     url = clean_url(raw_url)
                     if not url:
                         continue
-                    url_key = normalize_url(url)
-                    if url_key in downloaded_urls:
-                        continue
-                    downloaded_urls.add(url_key)
                     tasks.append(executor.submit(download_image, session, record_id, col, url))
 
         print(f"Starting download of {len(tasks)} files... Press Ctrl+C to cancel.")
