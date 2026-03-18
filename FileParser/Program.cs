@@ -154,7 +154,18 @@ namespace FileParserv1
 
             if (string.IsNullOrWhiteSpace(outputFolder))
             {
-                outputFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "extracted");
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
+                var dirName = Path.GetFileName(baseDir);
+
+                if (string.Equals(dirName, "scripts", StringComparison.OrdinalIgnoreCase))
+                {
+                    var parentDir = Directory.GetParent(baseDir)?.FullName;
+                    outputFolder = Path.Combine(parentDir ?? baseDir, "extracted");
+                }
+                else
+                {
+                    outputFolder = Path.Combine(baseDir, "extracted");
+                }
             }
 
             Directory.CreateDirectory(outputFolder);
