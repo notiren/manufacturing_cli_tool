@@ -27,6 +27,7 @@ namespace FileParserv1
 
                 string rawPath = Console.ReadLine()?.Trim('"');
                 string filePath = CleanDragDropFilePath(rawPath);
+                string outputFolder = GetDefaultOutputFolder();
 
                 if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
                 {
@@ -43,17 +44,18 @@ namespace FileParserv1
                 switch (choice)
                 {
                     case "1":
-                        ProcessAdacData(filePath);
+                        ProcessAdacData(filePath, outputFolder);
                         break;
                     case "2":
-                        ProcessPoeNetowrkData(filePath);
+                        ProcessPoeNetworkData(filePath, outputFolder);
                         break;
                     default:
                         Console.WriteLine("Invalid choice. Please restart and enter 1 or 2.");
                         return;
                 }
+
                 Console.WriteLine("-----------");
-                Console.WriteLine("Successfully processed the file inside folder: 'extracted'\n");
+                Console.WriteLine($"Successfully processed the file inside folder: '{outputFolder}'\n");
             }
             catch (Exception e)
             {
@@ -84,6 +86,21 @@ namespace FileParserv1
             return input;
         }
 
+        public static string GetDefaultOutputFolder()
+        {
+            var baseDir = Directory.GetCurrentDirectory().TrimEnd(Path.DirectorySeparatorChar);
+            var dirName = Path.GetFileName(baseDir);
+
+            if (string.Equals(dirName, "scripts", StringComparison.OrdinalIgnoreCase))
+            {
+                var parentDir = Directory.GetParent(baseDir)?.FullName;
+                return Path.Combine(parentDir ?? baseDir, "extracted");
+            }
+            else
+            {
+                return Path.Combine(baseDir, "extracted");
+            }
+        }
         public static void ConvertToJsonPoE(List<string> serialNumbers
             , List<Dictionary<string
             , List<Dictionary<string, string>>>> allData
@@ -225,7 +242,7 @@ namespace FileParserv1
             , List<string> headers
             , Dictionary<string, string> testStatuses
             , string filePath
-            , string outputFolder = null)
+            , string outputFolder)
         {
             var config = new CsvConfiguration(cultureInfo: CultureInfo.InvariantCulture)
             {
@@ -234,13 +251,6 @@ namespace FileParserv1
             };
 
             var fileName = Path.GetFileNameWithoutExtension(filePath);
-
-            if (string.IsNullOrWhiteSpace(outputFolder))
-            {
-                outputFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "extracted");
-            }
-
-            Directory.CreateDirectory(outputFolder);
 
             string outputFilePath = Path.Combine(outputFolder, $"{fileName}.csv");
 
@@ -313,7 +323,7 @@ namespace FileParserv1
         }
 
 
-        static void ProcessAdacData(string filePath)
+        static void ProcessAdacData(string filePath, string outputFolder)
         {
             var files = ExtractArchiveFilesToMemory(filePath);
 
@@ -1092,11 +1102,11 @@ namespace FileParserv1
             }
 
             var headers = seq1Values.Keys.ToList();
-            WriteToCsv(serialNumbers, timeStamps, data, headers, testStatus, filePath);
+            WriteToCsv(serialNumbers, timeStamps, data, headers, testStatus, filePath, outputFolder);
         }
 
 
-        static void ProcessPoeNetowrkData(string filePath)
+        static void ProcessPoeNetworkData(string filePath, string outputFolder)
         {
             // Update the path to point to the correct directory for the file.
 
@@ -1174,7 +1184,7 @@ namespace FileParserv1
                 }
 
             }
-            ConvertToJsonPoE(serialNumbers, allData, headers, summaryAllData, filePath, allTaskDetails);
+            ConvertToJsonPoE(serialNumbers, allData, headers, summaryAllData, filePath, allTaskDetails, outputFolder);
         }
 
         static Dictionary<string, string> GetSummaryData(string[] lines)
