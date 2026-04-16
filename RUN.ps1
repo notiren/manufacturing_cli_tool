@@ -8,5 +8,12 @@ $scriptPath = Join-Path $PSScriptRoot "cli_tool.py"
 # Change working directory to script folder
 Set-Location $PSScriptRoot
 
-# Run Python with the script
-& $pythonExe "$scriptPath"
+# Check for web mode argument
+if ($args -contains "--web") {
+    Write-Host "Starting Manufacturing CLI Tool in Web Mode..."
+    Write-Host "Open your browser to http://localhost:5000"
+    Write-Host "Press Ctrl+C to stop the web server"
+    & $pythonExe "$scriptPath" --web
+} else {
+    & $pythonExe "$scriptPath"
+}
