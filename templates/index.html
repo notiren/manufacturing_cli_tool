@@ -122,18 +122,18 @@
                 Analyzes PoE EELoad, PoE Network or Adapter Edac test data for failed measurements. Accepts .json, .txt, or zipped multiple files (.zip). Output folder: extracted/
                 {% elif key == 'analyze_mtf_data' %}
                 Selectable vendor (Unison or LCE). Accepts raw files in .xlsx format. Includes a Limits Table where we can set Limits and Tolerance. Output folder: extracted/
-                {% elif key == 'convert_csv_excel_headers' %}
+                {% elif key == 'csv_convert_to_excel' %}
                 Converts PoE EELoad .csv files into Excel format with custom headers. Output folder: extracted/
+                {% elif key == 'csv_split_tests' %}
+                {% elif key == 'csv_split_tests' %}
+                Splits large CSV test files into smaller, more manageable chunks.
                 {% elif key == 'download_img_url' %}
-                Downloads images from URLs specified in a text file. Supports concurrent downloads with progress tracking.
                 {% elif key == 'FileParser' %}
                 Parses various file formats using the .NET FileParser application.
                 {% elif key == 'format_mic_calibration_file' %}
                 Formats microphone calibration files for manufacturing testing.
                 {% elif key == 'qrcode_gen' %}
                 Generates QR codes for manufacturing labels and tracking.
-                {% elif key == 'split_csv_tests' %}
-                Splits large CSV test files into smaller, more manageable chunks.
                 {% elif key == 'camera_qc_analyzer' %}
                 Desktop GUI tool for analyzing camera image quality. Runs BlackNoise and IR Cut analysis on images from 5 subfolders. Set custom thresholds, view per-image PASS/FAIL results, export an Excel report, and split images into PASS/FAIL folders.
                 {% elif key == 'validate_limits' %}

@@ -22,12 +22,12 @@ SCRIPTS = {
     "analyze_json_zip": ("Analyze JSON/ZIP", "scripts/analyze_json_zip.py"),
     "analyze_mtf_data": ("Analyze MTF Data", "scripts/analyze_mtf_data.py"),
     "camera_qc_analyzer": ("Camera QC Analyzer", "scripts/camera_qc_analyzer.py"),
-    "convert_csv_excel_headers": ("Convert CSV to Excel", "scripts/convert_csv_excel_headers.py"),
+    "csv_convert_to_excel": ("CSV Convert to Excel", "scripts/csv_convert_to_excel.py"),
+    "csv_split_tests": ("CSV Split Tests", "scripts/csv_split_tests.py"),
     "download_img_url": ("Download Images from URL", "scripts/download_img_url.py"),
     "FileParser": ("File Parser", "scripts/FileParser.exe"),
     "format_mic_calibration_file": ("Format Mic Calibration File", "scripts/format_mic_calibration_file.py"),
     "qrcode_gen": ("Generate QR Code", "scripts/qrcode_gen.py"),
-    "split_csv_tests": ("Split CSV Tests", "scripts/split_csv_tests.py"),
     "validate_limits": ("Validate Limits", "scripts/validate_limits.py"),
 }
 

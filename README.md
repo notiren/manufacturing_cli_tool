@@ -89,28 +89,37 @@ python scripts/camera_qc_analyzer.py
 
 ---
 
-### 4. Convert CSV to Excel
+### 4. CSV Convert to Excel
 
 - Converts PoE EELoad `.csv` files into Excel format with custom headers  
 - Output folder: `extracted/`
 
 ---
 
-### 5. Download Images from URL
+### 5. CSV Split Tests
+
+- Splits `.csv` files containing a multitude of tests  
+- Asks for number of tests to include in one split  
+- Useful for uploading data to Factory Web  
+- Output folder: `extracted/`  
+
+---
+
+### 6. Download Images from URL
 
 - Downloads images listed in an Excel file (with URLs)  
 - Output folder: `downloaded_images/`
 
 ---
 
-### 6. File Parser
+### 7. File Parser
 
 - Parses raw PoE Network or Adapter Edac test files from `.zip` archives  
 - Output folder: `extracted/`
 
 ---
 
-### 7. Format Mic Calibration File
+### 8. Format Mic Calibration File
 
 - Extracts Serial Number (SERNO) and Sensitivity Factor (Sens Factor) from the input `.txt` file  
 - Interpolates calibration values to a standard reference frequency list  
@@ -119,19 +128,10 @@ python scripts/camera_qc_analyzer.py
 
 ---
 
-### 8. QR Code Generator
+### 9. QR Code Generator
 
 - Generates QR codes from text or URLs  
 - Takes user input and creates a PNG QR code image  
-- Output folder: `extracted/`  
-
----
-
-### 9. Split CSV Tests
-
-- Splits `.csv` files containing a multitude of tests  
-- Asks for number of tests to include in one split  
-- Useful for uploading data to Factory Web  
 - Output folder: `extracted/`  
 
 ---
