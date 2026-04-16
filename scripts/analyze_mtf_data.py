@@ -247,7 +247,7 @@ def insert_excel_formulas(ws, vendor):
         for r in range(header_row + 1, ws.max_row + 1):
             formula = (f'=IF({get_column_letter(col)}{r}="", "", '
                        f'IF({get_column_letter(col)}{r} < ({limit_cell}-{tol_cell}),1, '
-                       f'IF({get_column_letter(col)}{r} < ({limit_cell}+{tol_cell}),2,3)))')
+                       f'IF({get_column_letter(col)}{r} < {limit_cell},2,3)))')
             ws.cell(r, helper_col).value = formula
 
     # RESULT column formulas
@@ -322,12 +322,12 @@ def apply_conditional_formatting(ws, vendor):
         )
         ws.conditional_formatting.add(
             cell_range,
-            FormulaRule(formula=[f"AND({col_letter}{first_data_row} >= ({limit_cell}-{tol_cell}), {col_letter}{first_data_row} < ({limit_cell}+{tol_cell}))"],
+            FormulaRule(formula=[f"AND({col_letter}{first_data_row} >= ({limit_cell}-{tol_cell}), {col_letter}{first_data_row} < {limit_cell})"],
                         fill=YELLOW_FILL, stopIfTrue=True)
         )
         ws.conditional_formatting.add(
             cell_range,
-            FormulaRule(formula=[f"{col_letter}{first_data_row} >= ({limit_cell}+{tol_cell})"], fill=GREEN_FILL)
+            FormulaRule(formula=[f"{col_letter}{first_data_row} >= {limit_cell}"], fill=GREEN_FILL)
         )
 
         # Apply borders to data table
