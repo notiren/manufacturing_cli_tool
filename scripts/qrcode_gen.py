@@ -14,7 +14,7 @@ def ensure_package(pkg, imp=None):
             sys.exit(1)
 
 ensure_package("qrcode")
-ensure_package("PIL")
+ensure_package("Pillow", "PIL")
 
 import qrcode
 import os
