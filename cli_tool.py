@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import os
+import threading
 import argparse
 
 def ensure_package(pkg, imp=None):
@@ -10,8 +11,10 @@ def ensure_package(pkg, imp=None):
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", pkg])
 
 ensure_package("flask")
+ensure_package("flask-socketio", "flask_socketio")
 
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
+from flask_socketio import SocketIO, emit
 
 def resource_path(relative_path):
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), relative_path)
@@ -19,59 +22,170 @@ def resource_path(relative_path):
 
 # ---------- Menu list ----------
 SCRIPTS = {
-    "analyze_json_zip": ("Analyze JSON/ZIP", "scripts/analyze_json_zip.py"),
-    "analyze_mtf_data": ("Analyze MTF Data", "scripts/analyze_mtf_data.py"),
-    "camera_qc_analyzer": ("Camera QC Analyzer", "scripts/camera_qc_analyzer.py"),
-    "csv_convert_to_excel": ("CSV Convert to Excel", "scripts/csv_convert_to_excel.py"),
-    "csv_split_tests": ("CSV Split Tests", "scripts/csv_split_tests.py"),
-    "download_img_url": ("Download Images from URL", "scripts/download_img_url.py"),
-    "FileParser": ("File Parser", "scripts/FileParser.exe"),
+    "analyze_json_zip":            ("Analyze JSON/ZIP",            "scripts/analyze_json_zip.py"),
+    "analyze_mtf_data":            ("Analyze MTF Data",            "scripts/analyze_mtf_data.py"),
+    "camera_qc_analyzer":          ("Camera QC Analyzer",          "scripts/camera_qc_analyzer.py"),
+    "csv_convert_to_excel":        ("CSV Convert to Excel",        "scripts/csv_convert_to_excel.py"),
+    "csv_split_tests":             ("CSV Split Tests",             "scripts/csv_split_tests.py"),
+    "download_img_url":            ("Download Images from URL",    "scripts/download_img_url.py"),
+    "FileParser":                  ("File Parser",                 "scripts/FileParser.exe"),
     "format_mic_calibration_file": ("Format Mic Calibration File", "scripts/format_mic_calibration_file.py"),
-    "qrcode_gen": ("Generate QR Code", "scripts/qrcode_gen.py"),
-    "validate_limits": ("Validate Limits", "scripts/validate_limits.py"),
+    "qrcode_gen":                  ("Generate QR Code",            "scripts/qrcode_gen.py"),
+    "validate_limits":             ("Validate Limits",             "scripts/validate_limits.py"),
 }
 
-# ---------- Flask App Setup ----------
+# ---------- Flask + SocketIO ----------
 app = Flask(__name__)
 app.secret_key = 'manufacturing_cli_tool_secret_key'
+socketio = SocketIO(app, async_mode='threading')
 
+# sid -> subprocess
+running_processes = {}
+# sid -> generation counter (incremented each time a new script starts)
+session_generations = {}
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(resource_path('web_images'), 'manufacturing.png', mimetype='image/png')
+
+# ---------- Routes ----------
 @app.route('/')
 def index():
     return render_template('index.html', scripts=SCRIPTS)
 
-@app.route('/run/<script_key>', methods=['GET', 'POST'])
-def run_script(script_key):
+@app.route('/terminal/<script_key>')
+def terminal(script_key):
     if script_key not in SCRIPTS:
         flash('Script not found', 'error')
         return redirect(url_for('index'))
+    desc, _ = SCRIPTS[script_key]
+    return render_template('terminal.html', script_key=script_key, script_desc=desc)
+
+# ---------- SocketIO events ----------
+@socketio.on('start_script')
+def handle_start_script(data):
+    script_key = data.get('script_key')
+    if script_key not in SCRIPTS:
+        emit('output', {'data': 'Script not found\r\n'})
+        return
 
     desc, script_rel_path = SCRIPTS[script_key]
     script_path = resource_path(script_rel_path)
 
     if not os.path.exists(script_path):
-        flash(f'Script not found: {script_path}', 'error')
-        return redirect(url_for('index'))
+        emit('output', {'data': f'Script not found: {script_path}\r\n'})
+        return
+
+    sid = request.sid
+
+    # Increment generation FIRST so any running stream_output thread stops emitting
+    gen = session_generations.get(sid, 0) + 1
+    session_generations[sid] = gen
+
+    # Kill any previously running process for this client
+    old = running_processes.pop(sid, None)
+    if old:
+        try:
+            old.terminate()
+        except Exception:
+            pass
 
     try:
         if script_path.endswith('.py'):
-            process = subprocess.Popen([sys.executable, script_path])
+            cmd = [sys.executable, '-u', script_path]
         elif script_path.endswith('.exe'):
-            process = subprocess.Popen([script_path])
+            cmd = [script_path]
         else:
-            flash('Unsupported file type', 'error')
-            return redirect(url_for('index'))
+            emit('output', {'data': 'Unsupported file type\r\n'})
+            return
 
-        process.wait()
-        flash(f'Successfully ran: {desc}', 'success')
+        env = os.environ.copy()
+        env['PYTHONUTF8'] = '1'
+
+        process = subprocess.Popen(
+            cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=0,
+            cwd=resource_path('.'),
+            env=env
+        )
+        running_processes[sid] = process
+        emit('clear_terminal', {})
+
+        def stream_output(my_gen=gen):
+            try:
+                while True:
+                    chunk = process.stdout.read(1)
+                    if not chunk:
+                        break
+                    if session_generations.get(sid) != my_gen:
+                        return
+                    socketio.emit('output', {'data': chunk.decode('utf-8', errors='replace')}, to=sid)
+                process.stdout.close()
+                if session_generations.get(sid) == my_gen:
+                    socketio.emit('output', {'data': '\r\n\r\n[Process finished]\r\n'}, to=sid)
+                    socketio.emit('script_done', {}, to=sid)
+            except Exception as e:
+                if session_generations.get(sid) == my_gen:
+                    socketio.emit('output', {'data': f'\r\n[Stream error: {e}]\r\n'}, to=sid)
+            finally:
+                running_processes.pop(sid, None)
+
+        threading.Thread(target=stream_output, daemon=True).start()
+
     except Exception as e:
-        flash(f'Error running {desc}: {str(e)}', 'error')
+        emit('output', {'data': f'Failed to start: {str(e)}\r\n'})
 
-    return redirect(url_for('index'))
+@socketio.on('stop_script')
+def handle_stop_script(data=None):
+    process = running_processes.pop(request.sid, None)
+    if process:
+        try:
+            process.terminate()
+        except Exception:
+            pass
+
+@socketio.on('launch_gui')
+def handle_launch_gui(data):
+    script_key = data.get('script_key')
+    if script_key not in SCRIPTS:
+        return
+    desc, script_rel_path = SCRIPTS[script_key]
+    script_path = resource_path(script_rel_path)
+    if not os.path.exists(script_path):
+        return
+    try:
+        subprocess.Popen([sys.executable, script_path], cwd=resource_path('.'))
+    except Exception:
+        pass
+
+@socketio.on('input')
+def handle_input(data):
+    process = running_processes.get(request.sid)
+    if process and process.stdin:
+        try:
+            process.stdin.write(data['data'].encode('utf-8'))
+            process.stdin.flush()
+        except Exception:
+            pass
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    sid = request.sid
+    session_generations.pop(sid, None)
+    process = running_processes.pop(sid, None)
+    if process:
+        try:
+            process.terminate()
+        except Exception:
+            pass
 
 def run_web_server(port=5000):
     print(f"Starting web server on http://localhost:{port}")
     print("Press Ctrl+C to stop the server")
-    app.run(host='localhost', port=port, debug=False)
+    socketio.run(app, host='localhost', port=port, debug=False)
 
 
 # ---------- Display Menu ----------

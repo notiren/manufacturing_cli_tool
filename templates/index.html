@@ -4,10 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manufacturing CLI Tool</title>
+    <link rel="icon" type="image/png" href="/favicon.ico" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
     <style>
+        * { box-sizing: border-box; }
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
@@ -48,6 +54,7 @@
             color: #666;
             margin-bottom: 15px;
             line-height: 1.4;
+            font-size: 13px;
         }
         .run-button {
             background-color: #3498db;
@@ -60,58 +67,59 @@
             width: 100%;
             transition: background-color 0.2s;
         }
-        .run-button:hover {
-            background-color: #2980b9;
-        }
-        .run-button:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-        }
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
+        .run-button:hover { background-color: #2980b9; }
+        .run-button:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        #terminal-panel {
             display: none;
+            background: #0f172a;
+            border-radius: 8px;
+            border: 1px solid #374151;
+            margin-bottom: 30px;
+            overflow: hidden;
         }
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .terminal-topbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            background: #1f2937;
+            border-bottom: 1px solid #374151;
         }
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .terminal-topbar span {
+            color: #e5e7eb;
+            font-size: 14px;
+            font-weight: bold;
         }
+        #terminal-status {
+            margin-left: auto;
+            font-size: 12px;
+            color: #22c55e;
+        }
+        #terminal-status.done { color: #9ca3af; }
+        .close-terminal-btn {
+            background: #374151;
+            color: #e5e7eb;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .close-terminal-btn:hover { background: #4b5563; }
+        #terminal { padding: 4px; height: 400px; }
         .footer {
             text-align: center;
-            margin-top: 40px;
+            margin-top: 20px;
             color: #666;
             font-size: 14px;
-        }
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🔧 Manufacturing CLI Tool</h1>
+        <h1>Manufacturing CLI Tool</h1>
         <p>A web interface for common manufacturing data tasks</p>
     </div>
-
-    <div id="alert" class="alert" style="display: none;"></div>
 
     <div class="script-grid">
         {% for key, (desc, path) in scripts.items() %}
@@ -122,84 +130,150 @@
                 Analyzes PoE EELoad, PoE Network or Adapter Edac test data for failed measurements. Accepts .json, .txt, or zipped multiple files (.zip). Output folder: extracted/
                 {% elif key == 'analyze_mtf_data' %}
                 Selectable vendor (Unison or LCE). Accepts raw files in .xlsx format. Includes a Limits Table where we can set Limits and Tolerance. Output folder: extracted/
+                {% elif key == 'camera_qc_analyzer' %}
+                Desktop GUI tool for analyzing camera image quality. Runs BlackNoise and IR Cut analysis on images from 5 subfolders. Set custom thresholds, view per-image PASS/FAIL results, export an Excel report, and split images into PASS/FAIL folders.
                 {% elif key == 'csv_convert_to_excel' %}
                 Converts PoE EELoad .csv files into Excel format with custom headers. Output folder: extracted/
                 {% elif key == 'csv_split_tests' %}
-                {% elif key == 'csv_split_tests' %}
-                Splits large CSV test files into smaller, more manageable chunks.
+                Splits large CSV test files into smaller, more manageable chunks. Asks for number of tests per split. Output folder: extracted/
                 {% elif key == 'download_img_url' %}
+                Downloads images listed in an Excel file (with URLs). Supports concurrent downloads with progress tracking. Output folder: downloaded_images/
                 {% elif key == 'FileParser' %}
-                Parses various file formats using the .NET FileParser application.
+                Parses raw PoE Network or Adapter Edac test files from .zip archives. Output folder: extracted/
                 {% elif key == 'format_mic_calibration_file' %}
-                Formats microphone calibration files for manufacturing testing.
+                Extracts Serial Number and Sensitivity Factor from .txt file. Interpolates calibration values to standard reference frequencies. Output folder: extracted/
                 {% elif key == 'qrcode_gen' %}
-                Generates QR codes for manufacturing labels and tracking.
-                {% elif key == 'camera_qc_analyzer' %}
-                Desktop GUI tool for analyzing camera image quality. Runs BlackNoise and IR Cut analysis on images from 5 subfolders. Set custom thresholds, view per-image PASS/FAIL results, export an Excel report, and split images into PASS/FAIL folders.
+                Generates QR codes from text or URLs. Creates a PNG QR code image. Output folder: extracted/
                 {% elif key == 'validate_limits' %}
-                Validates test results against predefined limits and tolerances.
+                Validates raw test data files using limit profiles. Supports Adapter EDAC, PoE EELoad and PoE Network data. Output folder: extracted/
                 {% endif %}
             </div>
-            <button class="run-button" onclick="runScript('{{ key }}', this)">
-                Run {{ desc }}
+            <button class="run-button" {% if key == 'camera_qc_analyzer' %}onclick="launchGui('{{ key }}', '{{ desc }}')"{% else %}onclick="openTerminal('{{ key }}', '{{ desc }}')"{% endif %}>
+                &#x25B6; Run {{ desc }}
             </button>
         </div>
         {% endfor %}
     </div>
 
+    <div id="terminal-panel">
+        <div class="terminal-topbar">
+            <span id="terminal-title">Terminal</span>
+            <span id="terminal-status">&#x25CF; Running...</span>
+            <button class="close-terminal-btn" onclick="closeTerminal()">&#x2715; Close</button>
+        </div>
+        <div id="terminal"></div>
+    </div>
+
     <div class="footer">
-        <p>💡 Tip: Scripts will run in the background. Check the extracted/ folder for output files.</p>
-        <p>🔄 Refresh the page to see updated results</p>
+        <p>&#x1F4A1; Tip: Check the extracted/ folder for output files after running scripts.</p>
     </div>
 
     <script>
-        function showAlert(message, type) {
-            const alertDiv = document.getElementById('alert');
-            alertDiv.textContent = message;
-            alertDiv.className = `alert alert-${type}`;
-            alertDiv.style.display = 'block';
+        const term = new Terminal({
+            cursorBlink: true,
+            scrollback: 5000,
+            fontSize: 14,
+            fontFamily: 'Consolas, "Courier New", monospace',
+            theme: {
+                background: '#0f172a',
+                foreground: '#e5e7eb',
+                cursor: '#3b82f6',
+                selectionBackground: '#3b82f633',
+            }
+        });
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+        term.open(document.getElementById('terminal'));
 
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                alertDiv.style.display = 'none';
-            }, 5000);
-        }
+        const socket = io();
+        let inputBuffer = '';
+        let scriptDone = false;
 
-        function runScript(scriptKey, button) {
-            // Disable button and show loading
-            button.disabled = true;
-            const originalText = button.textContent;
-            button.innerHTML = '<span class="loading"></span>Running...';
+        socket.on('output', (data) => {
+            term.write(data.data.replace(/\n/g, '\r\n'));
+        });
 
-            // Make request to run the script
-            fetch(`/run/${scriptKey}`, {
-                method: 'POST'
-            })
-            .then(response => {
-                if (response.ok) {
-                    showAlert('Script completed successfully!', 'success');
-                } else {
-                    showAlert('Error running script', 'error');
+        socket.on('script_done', () => {
+            scriptDone = true;
+            const status = document.getElementById('terminal-status');
+            status.textContent = '\u25CF Finished';
+            status.className = 'done';
+        });
+
+        term.onKey(({ key, domEvent }) => {
+            if (scriptDone) return;
+            const code = domEvent.keyCode;
+            if (code === 13) {
+                term.write('\r\n');
+                socket.emit('input', { data: inputBuffer + '\n' });
+                inputBuffer = '';
+            } else if (code === 8) {
+                if (inputBuffer.length > 0) {
+                    inputBuffer = inputBuffer.slice(0, -1);
+                    term.write('\b \b');
                 }
-            })
-            .catch(error => {
-                showAlert('Error: ' + error.message, 'error');
-            })
-            .finally(() => {
-                // Re-enable button
-                button.disabled = false;
-                button.textContent = originalText;
-            });
+            } else if (domEvent.ctrlKey && key === 'c') {
+                socket.emit('input', { data: '\x03' });
+            } else if (domEvent.ctrlKey && domEvent.key === 'v') {
+                navigator.clipboard.readText().then(text => {
+                    if (!text) return;
+                    inputBuffer += text;
+                    term.write(text);
+                });
+            } else if (!domEvent.ctrlKey && !domEvent.altKey) {
+                inputBuffer += key;
+                term.write(key);
+            }
+        });
+
+        // Drag-and-drop file path into terminal
+        const termEl = document.getElementById('terminal');
+        termEl.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+        termEl.addEventListener('drop', e => {
+            e.preventDefault();
+            if (scriptDone) return;
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                // Browser only gives the filename, not the full path.
+                // We send a special event to let the server handle it via a text drop hint.
+                const name = files[0].name;
+                term.write('\r\n\x1b[33m[Drop detected: ' + name + ' — type or paste the full path below]\x1b[0m\r\n');
+            }
+            // Also handle plain text drops (e.g., dragged path string from Explorer address bar)
+            const text = e.dataTransfer.getData('text');
+            if (text) {
+                inputBuffer += text;
+                term.write(text);
+            }
+        });
+
+        function openTerminal(scriptKey, scriptDesc) {
+            const panel = document.getElementById('terminal-panel');
+            panel.style.display = 'block';
+            document.getElementById('terminal-title').textContent = '\u25B6 ' + scriptDesc;
+            const status = document.getElementById('terminal-status');
+            status.textContent = '\u25CF Running...';
+            status.className = '';
+            term.reset();
+            inputBuffer = '';
+            scriptDone = false;
+            fitAddon.fit();
+            panel.scrollIntoView({ behavior: 'smooth' });
+            // Kill any previous process for this socket, then start fresh
+            socket.emit('stop_script', {});
+            socket.emit('start_script', { script_key: scriptKey });
         }
 
-        // Check for flash messages from server
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        showAlert('{{ message }}', '{{ category }}');
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
+        function launchGui(scriptKey, scriptDesc) {
+            // GUI scripts (like Camera QC Analyzer) run without a terminal
+            socket.emit('launch_gui', { script_key: scriptKey });
+        }
+
+        function closeTerminal() {
+            document.getElementById('terminal-panel').style.display = 'none';
+            socket.emit('stop_script', {});
+            term.reset();
+        }
     </script>
 </body>
 </html>
