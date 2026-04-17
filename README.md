@@ -13,13 +13,13 @@ pip install -r requirements.txt
 ---
 ### Run via PowerShell Scripts
 
-**CLI Mode** — launches the interactive command-line menu:
+**CLI Mode** launches the interactive command-line menu:
 
 ```powershell
 .\start-cli.ps1
 ```
 
-**Web Mode** — starts the web server and opens the browser automatically:
+**Web Mode** starts the web server and opens the browser automatically:
 
 ```powershell
 .\start-web.ps1
@@ -27,7 +27,7 @@ pip install -r requirements.txt
 
 Then open your browser to `http://localhost:5000` if it does not open automatically.
 
-**Update** — pulls the latest changes from GitHub:
+**Update** pulls the latest changes from GitHub:
 
 ```powershell
 .\update.ps1
