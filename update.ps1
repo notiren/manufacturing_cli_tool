@@ -24,3 +24,13 @@ if ($localHash -eq $remoteHash) {
         Write-Host "Update failed. Check for conflicts or network issues." -ForegroundColor Red
     }
 }
+
+# Install/update requirements after pull
+Write-Host "Installing/updating requirements..."
+pip install -r "$PSScriptRoot\requirements.txt" --quiet
+
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "Requirements are up to date."
+} else {
+    Write-Host "Failed to install requirements. Run: pip install -r requirements.txt" -ForegroundColor Red
+}
