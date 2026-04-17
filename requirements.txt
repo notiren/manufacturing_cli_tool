@@ -1,0 +1,11 @@
+flask
+flask-socketio
+pandas
+openpyxl
+chardet
+requests
+tqdm
+numpy
+matplotlib
+opencv-python
+qrcode[pil]

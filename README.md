@@ -3,23 +3,49 @@
 A simple command-line tool to assist with common manufacturing data tasks such as parsing test files, downloading images, and converting file formats.
 
 ---
-### Run via Python (CLI Mode)
+### Install Requirements
 
 ```powershell
-python cli_tool.py
+# Install requirements
+pip install -r requirements.txt
 ```
 
-### Run as Web Server (Web Mode)
+---
+### Run via PowerShell Scripts
+
+**CLI Mode** — launches the interactive command-line menu:
 
 ```powershell
-# Run web server on default port 5000
+.\start-cli.ps1
+```
+
+**Web Mode** — starts the web server and opens the browser automatically:
+
+```powershell
+.\start-web.ps1
+```
+
+Then open your browser to `http://localhost:5000` if it does not open automatically.
+
+**Update** — pulls the latest changes from GitHub:
+
+```powershell
+.\update.ps1
+```
+
+---
+### Run via Python directly
+
+```powershell
+# CLI mode
+python cli_tool.py
+
+# Web mode (default port 5000)
 python cli_tool.py --web
 
-# Run web server on custom port
+# Web mode (custom port)
 python cli_tool.py --web --port 8080
 ```
-
-Then open your browser to `http://localhost:5000` (or your custom port).
 
 ---
 ### Then
