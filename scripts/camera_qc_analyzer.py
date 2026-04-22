@@ -99,6 +99,46 @@ TERM_CYAN    = "#61d6d6"
 TERM_MAGENTA = "#b4009e"
 TERM_DIM     = "#767676"
 TERM_WHITE   = "#f2f2f2"
+TERM_HDR_BG  = "#1a1a1a"
+
+DARK_THEME = {
+    'BG': "#111827", 'BG_CARD': "#1f2937", 'BG_TABLE': "#0f172a", 'BG_INPUT': "#0f172a",
+    'FG': "#e5e7eb", 'FG_DIM': "#9ca3af",
+    'ACCENT': "#3b82f6", 'ACCENT_HOVER': "#2563eb",
+    'PASS_FG': "#22c55e", 'FAIL_FG': "#ef4444", 'WARN_FG': "#f59e0b",
+    'BORDER_CLR': "#374151",
+    'SPLIT_CLR': "#f59e0b", 'SPLIT_HOVER': "#d97706",
+    'TAB_ACTIVE': "#3b82f6", 'TAB_INACTIVE': "#374151",
+    'TERM_BG': "#0c0c0c", 'TERM_FG': "#cccccc",
+    'TERM_GREEN': "#16c60c", 'TERM_RED': "#e74856",
+    'TERM_YELLOW': "#f9f1a5", 'TERM_BLUE': "#3b78ff",
+    'TERM_CYAN': "#61d6d6", 'TERM_MAGENTA': "#b4009e",
+    'TERM_DIM': "#767676", 'TERM_WHITE': "#f2f2f2",
+    'TERM_HDR_BG': "#1a1a1a",
+}
+
+LIGHT_THEME = {
+    'BG': "#f3f4f6", 'BG_CARD': "#ffffff", 'BG_TABLE': "#f9fafb", 'BG_INPUT': "#ffffff",
+    'FG': "#111827", 'FG_DIM': "#6b7280",
+    'ACCENT': "#2563eb", 'ACCENT_HOVER': "#1d4ed8",
+    'PASS_FG': "#16a34a", 'FAIL_FG': "#dc2626", 'WARN_FG': "#b45309",
+    'BORDER_CLR': "#d1d5db",
+    'SPLIT_CLR': "#d97706", 'SPLIT_HOVER': "#b45309",
+    'TAB_ACTIVE': "#2563eb", 'TAB_INACTIVE': "#e5e7eb",
+    'TERM_BG': "#1e1e1e", 'TERM_FG': "#d4d4d4",
+    'TERM_GREEN': "#4ec994", 'TERM_RED': "#f14c4c",
+    'TERM_YELLOW': "#cca700", 'TERM_BLUE': "#3b8eea",
+    'TERM_CYAN': "#29b8db", 'TERM_MAGENTA': "#bc8cff",
+    'TERM_DIM': "#858585", 'TERM_WHITE': "#e8e8e8",
+    'TERM_HDR_BG': "#2d2d2d",
+}
+
+
+def _apply_global_theme(theme):
+    """Update all color globals to match the given theme dict."""
+    g = globals()
+    for key, val in theme.items():
+        g[key] = val
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
@@ -529,13 +569,16 @@ class CameraQCApp:
         self.all_results = {}     # folder_name -> [result dicts]
         self.detected_folders = {}  # folder_name -> image count
         self.running = False
+        self._is_dark = True
+        self._btn_registry = []   # list of (btn_widget, bg_key, hover_key, fg_literal)
+        self._theme_refs = {}     # misc widget refs for theming
 
         self._setup_styles()
         self._build_ui()
 
     def _setup_styles(self):
         style = ttk.Style()
-        style.theme_use("clam")
+        style.theme_use("classic")
         style.configure("Main.TFrame",       background=BG)
         style.configure("Card.TFrame",       background=BG_CARD)
         style.configure("Title.TLabel",      background=BG, foreground=ACCENT, font=("Segoe UI", 18, "bold"))
@@ -560,16 +603,17 @@ class CameraQCApp:
         style.map("Custom.Treeview",
                    background=[("selected", ACCENT)], foreground=[("selected", "#ffffff")])
 
-    def _make_button(self, parent, text, command, bg_clr=None, hover_clr=None, fg_clr=None):
-        bg = bg_clr or ACCENT
-        fg = fg_clr or "#ffffff"
-        hover = hover_clr or ACCENT_HOVER
+    def _make_button(self, parent, text, command, bg_key='ACCENT', hover_key='ACCENT_HOVER', fg_clr="#ffffff"):
+        t = globals()
+        bg = t[bg_key]
+        hover = t[hover_key]
         btn = tk.Button(parent, text=text, command=command,
-                        bg=bg, fg=fg, activebackground=hover, activeforeground="#ffffff",
+                        bg=bg, fg=fg_clr, activebackground=hover, activeforeground=fg_clr,
                         font=("Segoe UI", 10, "bold"), relief="flat", cursor="hand2",
                         padx=14, pady=7, borderwidth=0)
-        btn.bind("<Enter>", lambda e: btn.configure(bg=hover))
-        btn.bind("<Leave>", lambda e: btn.configure(bg=bg))
+        btn.bind("<Enter>", lambda e, b=btn: b.configure(bg=globals()[hover_key]))
+        btn.bind("<Leave>", lambda e, b=btn: b.configure(bg=globals()[bg_key]))
+        self._btn_registry.append((btn, bg_key, hover_key, fg_clr))
         return btn
 
     def _build_ui(self):
@@ -579,6 +623,14 @@ class CameraQCApp:
         ttk.Label(hdr, text="⬡  Camera QC Analyzer v4", style="Title.TLabel").pack(side="left")
         ttk.Label(hdr, text="BlackNoise + IR Cut Pipeline",
                   style="Subtitle.TLabel").pack(side="left", padx=(12, 0), pady=(5, 0))
+        self._theme_toggle_btn = tk.Button(
+            hdr, text="☀ Light", command=self._toggle_theme,
+            bg=BG_CARD, fg=FG_DIM, activebackground=BORDER_CLR, activeforeground=FG,
+            font=("Segoe UI", 9, "bold"), relief="flat", cursor="hand2",
+            padx=12, pady=5, borderwidth=0
+        )
+        self._theme_toggle_btn.pack(side="right")
+        self._theme_refs['toggle_btn'] = self._theme_toggle_btn
 
         # ── Control bar ──
         ctrl = ttk.Frame(self.root, style="Main.TFrame")
@@ -609,6 +661,8 @@ class CameraQCApp:
         self.ir_display = tk.Label(thresh_info, text=f"IR Cut R-G: {self.ircut_threshold.get()}",
                                    font=("Consolas", 10, "bold"), bg=BG_CARD, fg=WARN_FG)
         self.ir_display.pack(anchor="w")
+        self._theme_refs['bn_display'] = self.bn_display
+        self._theme_refs['ir_display'] = self.ir_display
 
         self.run_btn = self._make_button(right_card, "▶  Run Analysis", self._start_analysis)
         self.run_btn.pack(padx=10, pady=(8, 4))
@@ -629,6 +683,7 @@ class CameraQCApp:
         self.tab_bar = tk.Frame(self.root, bg=BG)
         self.tab_bar.pack(fill="x", padx=20, pady=(8, 0))
         self.tab_buttons = {}
+        self._theme_refs['tab_bar'] = self.tab_bar
 
         # ── Terminal log (main content area) ──
         self._build_terminal()
@@ -642,12 +697,12 @@ class CameraQCApp:
         self.export_btn.configure(state="disabled")
 
         self.split_btn = self._make_button(bottom, "📂  Split PASS / FAIL Folders", self._split_folders,
-                                           bg_clr=SPLIT_CLR, hover_clr=SPLIT_HOVER)
+                                           bg_key='SPLIT_CLR', hover_key='SPLIT_HOVER')
         self.split_btn.pack(side="right", padx=(0, 8))
         self.split_btn.configure(state="disabled")
 
         self.rerun_btn = self._make_button(bottom, "🔄  Re-classify", self._rerun,
-                                           bg_clr=BG_CARD, hover_clr=BORDER_CLR, fg_clr=FG_DIM)
+                                           bg_key='BG_CARD', hover_key='BORDER_CLR', fg_clr=FG_DIM)
         self.rerun_btn.pack(side="right", padx=(0, 8))
         self.rerun_btn.configure(state="disabled")
 
@@ -660,21 +715,25 @@ class CameraQCApp:
         term_frame.pack(fill="both", expand=True, padx=20, pady=(4, 0))
 
         # Terminal header bar
-        term_hdr = tk.Frame(term_frame, bg="#1a1a1a")
+        term_hdr = tk.Frame(term_frame, bg=TERM_HDR_BG)
         term_hdr.pack(fill="x")
 
-        tk.Label(term_hdr, text="⬤", font=("Segoe UI", 7), bg="#1a1a1a",
-                 fg=TERM_RED).pack(side="left", padx=(8, 0), pady=3)
-        tk.Label(term_hdr, text="⬤", font=("Segoe UI", 7), bg="#1a1a1a",
-                 fg=TERM_YELLOW).pack(side="left", padx=(3, 0), pady=3)
-        tk.Label(term_hdr, text="⬤", font=("Segoe UI", 7), bg="#1a1a1a",
-                 fg=TERM_GREEN).pack(side="left", padx=(3, 0), pady=3)
-        tk.Label(term_hdr, text="  TERMINAL — Analysis Log",
-                 font=("Consolas", 9, "bold"), bg="#1a1a1a",
-                 fg=TERM_DIM).pack(side="left", padx=(6, 0), pady=3)
+        dot1 = tk.Label(term_hdr, text="⬤", font=("Segoe UI", 7), bg=TERM_HDR_BG,
+                        fg=TERM_RED)
+        dot1.pack(side="left", padx=(8, 0), pady=3)
+        dot2 = tk.Label(term_hdr, text="⬤", font=("Segoe UI", 7), bg=TERM_HDR_BG,
+                        fg=TERM_YELLOW)
+        dot2.pack(side="left", padx=(3, 0), pady=3)
+        dot3 = tk.Label(term_hdr, text="⬤", font=("Segoe UI", 7), bg=TERM_HDR_BG,
+                        fg=TERM_GREEN)
+        dot3.pack(side="left", padx=(3, 0), pady=3)
+        term_title_lbl = tk.Label(term_hdr, text="  TERMINAL — Analysis Log",
+                                  font=("Consolas", 9, "bold"), bg=TERM_HDR_BG,
+                                  fg=TERM_DIM)
+        term_title_lbl.pack(side="left", padx=(6, 0), pady=3)
 
         clear_btn = tk.Button(term_hdr, text="Clear", font=("Consolas", 8),
-                              bg="#1a1a1a", fg=TERM_DIM, activebackground="#333",
+                              bg=TERM_HDR_BG, fg=TERM_DIM, activebackground="#333",
                               activeforeground=TERM_WHITE, relief="flat", cursor="hand2",
                               borderwidth=0, command=self._clear_terminal)
         clear_btn.pack(side="right", padx=8, pady=3)
@@ -694,18 +753,25 @@ class CameraQCApp:
         term_scroll.pack(side="right", fill="y")
 
         # Configure color tags
-        self.terminal.tag_configure("info",    foreground=TERM_BLUE)
-        self.terminal.tag_configure("success", foreground=TERM_GREEN)
-        self.terminal.tag_configure("error",   foreground=TERM_RED)
-        self.terminal.tag_configure("warn",    foreground=TERM_YELLOW)
-        self.terminal.tag_configure("dim",     foreground=TERM_DIM)
-        self.terminal.tag_configure("cyan",    foreground=TERM_CYAN)
-        self.terminal.tag_configure("magenta", foreground=TERM_MAGENTA)
-        self.terminal.tag_configure("white",   foreground=TERM_WHITE)
-        self.terminal.tag_configure("pass_tag", foreground=TERM_GREEN, font=("Consolas", 9, "bold"))
-        self.terminal.tag_configure("fail_tag", foreground=TERM_RED, font=("Consolas", 9, "bold"))
-        self.terminal.tag_configure("header",  foreground=TERM_CYAN, font=("Consolas", 9, "bold"))
+        self.terminal.tag_configure("info",      foreground=TERM_BLUE)
+        self.terminal.tag_configure("success",   foreground=TERM_GREEN)
+        self.terminal.tag_configure("error",     foreground=TERM_RED)
+        self.terminal.tag_configure("warn",      foreground=TERM_YELLOW)
+        self.terminal.tag_configure("dim",       foreground=TERM_DIM)
+        self.terminal.tag_configure("cyan",      foreground=TERM_CYAN)
+        self.terminal.tag_configure("magenta",   foreground=TERM_MAGENTA)
+        self.terminal.tag_configure("white",     foreground=TERM_WHITE)
+        self.terminal.tag_configure("pass_tag",  foreground=TERM_GREEN, font=("Consolas", 9, "bold"))
+        self.terminal.tag_configure("fail_tag",  foreground=TERM_RED,   font=("Consolas", 9, "bold"))
+        self.terminal.tag_configure("header",    foreground=TERM_CYAN,  font=("Consolas", 9, "bold"))
         self.terminal.tag_configure("timestamp", foreground=TERM_DIM)
+
+        # Store refs for theming
+        self._theme_refs['term_frame'] = term_frame
+        self._theme_refs['term_hdr'] = term_hdr
+        self._theme_refs['term_clear_btn'] = clear_btn
+        self._theme_refs['term_hdr_dots'] = [dot1, dot2, dot3]
+        self._theme_refs['term_hdr_label'] = term_title_lbl
 
     def _log(self, message, tag="white", timestamp=True):
         """Append a message to the terminal log with optional color tag and timestamp."""
@@ -725,6 +791,71 @@ class CameraQCApp:
         self.terminal.configure(state="normal")
         self.terminal.delete("1.0", "end")
         self.terminal.configure(state="disabled")
+
+    def _toggle_theme(self):
+        self._is_dark = not self._is_dark
+        theme = DARK_THEME if self._is_dark else LIGHT_THEME
+        _apply_global_theme(theme)
+        self._setup_styles()
+        self._apply_ui_theme()
+
+    def _apply_ui_theme(self):
+        t = globals()
+        # Root
+        self.root.configure(bg=t['BG'])
+        # Tab bar
+        self.tab_bar.configure(bg=t['BG'])
+        # Rebuild tabs with new theme
+        if self.tab_buttons:
+            self._build_tabs()
+        # Rebuild stats
+        if self.stats_frame.winfo_children():
+            self._show_stats_all()
+        # bn/ir displays
+        self.bn_display.configure(bg=t['BG_CARD'], fg=t['ACCENT'])
+        self.ir_display.configure(bg=t['BG_CARD'], fg=t['WARN_FG'])
+        # Terminal
+        ref = self._theme_refs
+        ref['term_frame'].configure(bg=t['TERM_BG'])
+        ref['term_hdr'].configure(bg=t['TERM_HDR_BG'])
+        ref['term_hdr_label'].configure(bg=t['TERM_HDR_BG'], fg=t['TERM_DIM'])
+        ref['term_clear_btn'].configure(bg=t['TERM_HDR_BG'], fg=t['TERM_DIM'],
+                                        activebackground=t['TERM_HDR_BG'])
+        dot_colors = [t['TERM_RED'], t['TERM_YELLOW'], t['TERM_GREEN']]
+        for dot_lbl, color in zip(ref.get('term_hdr_dots', []), dot_colors):
+            dot_lbl.configure(bg=t['TERM_HDR_BG'], fg=color)
+        self.terminal.configure(bg=t['TERM_BG'], fg=t['TERM_FG'],
+                                insertbackground=t['TERM_GREEN'],
+                                selectbackground="#264f78" if self._is_dark else "#b4d5fe")
+        # Re-configure terminal color tags
+        self.terminal.tag_configure("info",      foreground=t['TERM_BLUE'])
+        self.terminal.tag_configure("success",   foreground=t['TERM_GREEN'])
+        self.terminal.tag_configure("error",     foreground=t['TERM_RED'])
+        self.terminal.tag_configure("warn",      foreground=t['TERM_YELLOW'])
+        self.terminal.tag_configure("dim",       foreground=t['TERM_DIM'])
+        self.terminal.tag_configure("cyan",      foreground=t['TERM_CYAN'])
+        self.terminal.tag_configure("magenta",   foreground=t['TERM_MAGENTA'])
+        self.terminal.tag_configure("white",     foreground=t['TERM_WHITE'])
+        self.terminal.tag_configure("pass_tag",  foreground=t['TERM_GREEN'], font=("Consolas", 9, "bold"))
+        self.terminal.tag_configure("fail_tag",  foreground=t['TERM_RED'],   font=("Consolas", 9, "bold"))
+        self.terminal.tag_configure("header",    foreground=t['TERM_CYAN'],  font=("Consolas", 9, "bold"))
+        self.terminal.tag_configure("timestamp", foreground=t['TERM_DIM'])
+        # Buttons in registry
+        for btn, bg_key, hover_key, fg_clr in self._btn_registry:
+            try:
+                btn.configure(bg=t[bg_key], activebackground=t[hover_key],
+                              fg=fg_clr, activeforeground=fg_clr)
+            except Exception:
+                pass
+        # Rerun button fg is dynamic (FG_DIM changes between themes)
+        if hasattr(self, 'rerun_btn'):
+            self.rerun_btn.configure(fg=t['FG_DIM'], activeforeground=t['FG'])
+        # Toggle button
+        icon = "☀ Light" if self._is_dark else "🌙 Dark"
+        ref['toggle_btn'].configure(
+            text=icon, bg=t['BG_CARD'], fg=t['FG_DIM'],
+            activebackground=t['BORDER_CLR'], activeforeground=t['FG']
+        )
 
     def _browse_folder(self):
         folder = filedialog.askdirectory(title="Select root folder with image subfolders")
