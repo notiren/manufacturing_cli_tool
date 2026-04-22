@@ -115,14 +115,22 @@ def handle_start_script(data):
         emit('clear_terminal', {})
 
         def stream_output(my_gen=gen):
+            import codecs
+            decoder = codecs.getincrementaldecoder('utf-8')(errors='replace')
             try:
                 while True:
-                    chunk = process.stdout.read(1)
+                    chunk = process.stdout.read(512)
                     if not chunk:
                         break
                     if session_generations.get(sid) != my_gen:
                         return
-                    socketio.emit('output', {'data': chunk.decode('utf-8', errors='replace')}, to=sid)
+                    text = decoder.decode(chunk)
+                    if text:
+                        socketio.emit('output', {'data': text}, to=sid)
+                # flush any remaining partial sequence
+                text = decoder.decode(b'', final=True)
+                if text and session_generations.get(sid) == my_gen:
+                    socketio.emit('output', {'data': text}, to=sid)
                 process.stdout.close()
                 if session_generations.get(sid) == my_gen:
                     socketio.emit('output', {'data': '\r\n\r\n[Process finished]\r\n'}, to=sid)

@@ -185,12 +185,13 @@ def main():
     fail_count = 0
     stop_flag = threading.Event()
 
+    # Signal handler only sets the flag — message is printed after pbar.close()
+    # so tqdm finishes its line before we write anything.
     def handle_interrupt(sig, frame):
-        print("\nInterrupt received, stopping downloads...")
         stop_flag.set()
 
     signal.signal(signal.SIGINT, handle_interrupt)
-    
+
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         with requests.Session() as session:
             for row in df.itertuples(index=False):
@@ -211,7 +212,18 @@ def main():
         print(f"Starting download of {len(tasks)} files... Press Ctrl+C to cancel.")
         completed = set()
         
-        pbar = tqdm(total=len(tasks), desc="Downloading", unit="file")
+        class _TtyStream:
+            """Wraps a stream and forces isatty()=True so tqdm uses \\r-based updates."""
+            def __init__(self, s): self._s = s
+            def write(self, data): return self._s.write(data)
+            def flush(self): self._s.flush()
+            def isatty(self): return True
+
+        pbar = tqdm(
+            total=len(tasks), desc="Downloading", unit="file",
+            file=_TtyStream(sys.stdout), ascii="░█", ncols=80, dynamic_ncols=False,
+            bar_format="{desc}: \033[96m{percentage:3.0f}%\033[0m|{bar}| \033[96m{n_fmt}\033[0m/\033[96m{total_fmt}\033[0m [{elapsed}<{remaining}, {rate_fmt}]",
+        )
         try:
             while len(completed) < len(tasks) and not stop_flag.is_set():
                 for future in tasks:
@@ -231,11 +243,11 @@ def main():
                 threading.Event().wait(0.1)
         except KeyboardInterrupt:
             stop_flag.set()
-            print("\nInterrupt received, stopping downloads...")
         finally:
             pbar.close()
             if stop_flag.is_set():
-                sys.exit(0)
+                print("\nInterrupt received, stopping downloads...")
+                os._exit(0)
                     
     print(f"All downloads attempted. {success_count} success, {fail_count} failed.")
     print(f"Images can be found inside folder: '{output_dir}'\n")

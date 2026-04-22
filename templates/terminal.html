@@ -107,7 +107,7 @@
         });
 
         socket.on('output', (data) => {
-            term.write(data.data.replace(/\n/g, '\r\n'));
+            term.write(data.data.replace(/\r\n|\r|\n/g, '\r\n'));
         });
 
         socket.on('script_done', () => {
