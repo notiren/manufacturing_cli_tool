@@ -56,10 +56,11 @@ def gen_qrcode(data, output_folder):
         counter += 1
 
     img.save(full_path)
+    print(f"QR Code generated and saved to: {full_path}")
+    print("=============================")
+    qr.print_ascii(invert=True)
     
-    print(f"QR code generated and saved as {full_path}")
-
-
+# Main
 def main():
     data = input("Enter the text or URL for your QR code: ")
     output_folder = get_output_folder("extracted")
