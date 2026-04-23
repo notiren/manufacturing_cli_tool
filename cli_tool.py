@@ -202,8 +202,8 @@ def display_menu():
     keys = list(SCRIPTS.keys())
     for i, key in enumerate(keys, 1):
         desc, _ = SCRIPTS[key]
-        print(f"{i}. {desc}")
-    print("q. Quit")
+        print(f"{i:2}. {desc}")
+    print(" q. Quit")
 
 
 # ---------- Get User Choice ----------
